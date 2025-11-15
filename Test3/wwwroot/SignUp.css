@@ -1,0 +1,109 @@
+﻿body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+
+.profile-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ddd;
+    padding: 1rem 2rem;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.profile-header .logo img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.photo-section {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
+    background-color: #ddd;
+}
+
+.photo-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: #888;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.user-icon {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.insert-photo {
+    margin-top: 0.5rem;
+    color: #555;
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+
+.info-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem;
+    flex-wrap: wrap;
+}
+
+.info-column {
+    flex: 1;
+    min-width: 300px;
+    margin: 0 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #555;
+}
+
+input {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 20px;
+    background-color: #e6e6e6;
+}
+
+input:enabled {
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+.insert-photo-file-input {
+    width: 200px;
+}

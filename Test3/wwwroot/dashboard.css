@@ -1,0 +1,146 @@
+﻿body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f8f8;
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* HEADER */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ddd;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+    .dashboard-header .left-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .dashboard-header .logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: white;
+        object-fit: contain;
+    }
+
+    .dashboard-header h1 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .dashboard-header p {
+        margin: 0;
+        font-style: italic;
+        font-size: 0.9rem;
+        color: #444;
+    }
+
+    .dashboard-header .center-section {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+    }
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 60px;
+    overflow: hidden;
+    width: 300px;
+    height: 36px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+    .search-bar input {
+        border: none;
+        outline: none;
+        padding: 0.5rem 1rem;
+        width: 100%;
+        font-size: 1rem;
+    }
+
+    .search-bar button {
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 0 0.8rem;
+        color: #444;
+        font-size: 1.1rem;
+    }
+
+.dashboard-header .right-section {
+    display: flex;
+    align-items: center;
+}
+
+.account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: #333;
+}
+
+    .account i {
+        font-size: 1.8rem;
+    }
+
+/* MAIN GRID */
+.apartments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.apartment-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.image-placeholder {
+    background-color: #ccc;
+    height: 150px;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.info {
+    flex-grow: 1;
+}
+
+    .info p {
+        margin: 0.3rem 0;
+    }
+
+.view-btn {
+    align-self: flex-end;
+    background-color: #ccc;
+    border: none;
+    border-radius: 12px;
+    padding: 0.3rem 1rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+    .view-btn:hover {
+        background-color: #bbb;
+    }

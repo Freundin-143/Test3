@@ -1,0 +1,156 @@
+﻿@page "/SignUp"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject UserService UserService
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JSRuntime
+
+<link href="css/SignUp.css" rel="stylesheet" />
+
+<div class="profile-container">
+    <header class="profile-header">
+        <div class="logo">
+            <img src="images/Default_Landlord.png" alt="Default User" />
+        </div>
+        <h2>User Sign Up</h2>
+    </header>
+
+    <div class="photo-section">
+        <div class="photo-placeholder">
+            @if (imageUrl != null)
+            {
+                <img src="@imageUrl" alt="User Photo"
+                     style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" />
+            }
+            else
+            {
+                <img src="images/Default_Landlord.png" alt="Default User"
+                     style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;" />
+            }
+        </div>
+        <br>
+        <InputFile OnChange="HandleFileSelected"
+                   accept=".png,.jpg,.jpeg"
+                   class="insert-photo-file-input"
+                   style="width:200px"/>
+    </div>
+
+    <div class="info-section">
+        <div class="info-column">
+            <label>First Name:</label>
+            <input @bind="user.FirstName" />
+
+            <label>Middle Name:</label>
+            <input @bind="user.MiddleName" />
+
+            <label>Last Name:</label>
+            <input @bind="user.LastName" />
+
+            <label>Gender:</label>
+            <input @bind="user.Gender" />
+
+            <label>Username:</label>
+            <input @bind="user.Username" />
+        </div>
+
+        <div class="info-column">
+            <label>Birthdate:</label>
+            <input type="date" @bind="user.Birthdate" />
+
+            <label>Age:</label>
+            <input @bind="user.Age"/>
+
+            <label>Contact Number:</label>
+            <input @bind="user.ContactNumber" />
+
+            <label>Email Address:</label>
+            <input type="email" @bind="user.Email" />
+
+            <label>Password:</label>
+            <input type="password" @bind="user.Password" />
+        </div>
+    </div>
+
+    <button class="save-btn" @onclick="SignUpUser">SIGN UP</button>
+
+    <p class="message">@message</p>
+</div>
+
+@code {
+    private User user = new();
+    private string message = "";
+
+    private async Task SignUpUser()
+    {
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(user.FirstName) ||
+            string.IsNullOrWhiteSpace(user.MiddleName) ||
+            string.IsNullOrWhiteSpace(user.LastName) ||
+            string.IsNullOrWhiteSpace(user.Email) ||
+            string.IsNullOrWhiteSpace(user.Gender) ||
+            string.IsNullOrWhiteSpace(user.Username) ||
+            string.IsNullOrWhiteSpace(user.Age) ||
+            string.IsNullOrWhiteSpace(user.ContactNumber) ||
+            string.IsNullOrWhiteSpace(user.Email) ||
+            string.IsNullOrWhiteSpace(user.Password))
+        {
+            message = "Please fill all required fields.";
+            return;
+        }
+
+        try
+        {
+            await UserService.CreateUser(user);
+            message = "User registered successfully!";
+
+            await Task.Delay(1000);
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            message = $"Error creating account: {ex.Message}";
+        }
+    }
+    private string? imageUrl;
+    private ElementReference fileInput;
+
+    private void TriggerFileInput()
+    {
+        // This will be handled by JavaScript interop
+        JSRuntime.InvokeVoidAsync("triggerFileInput", fileInput);
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        // Validate file type
+        if (file.ContentType.Contains("image/png") ||
+            file.ContentType.Contains("image/jpeg") ||
+            file.ContentType.Contains("image/jpg"))
+        {
+            // Check file size (optional: limit to 5MB)
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                // Handle file too large error - ongoing
+                
+                return;
+            }
+
+            // Convert to base64 for display
+            var format = "image/png";
+            var resizedImage = await file.RequestImageFileAsync(format, 100, 100);
+            var buffer = new byte[resizedImage.Size];
+            await resizedImage.OpenReadStream().ReadAsync(buffer);
+            imageUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+
+            // Alternatively, you can upload the file to your server here
+            // await UploadFile(file);
+        }
+        else
+        {
+            // Handle invalid file type
+            // You can show an error message to the user
+        }
+    }
+}

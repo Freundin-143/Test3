@@ -1,0 +1,61 @@
+﻿@page "/land_dashboard"
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+<link href="css/LandlordDashBoard.css" rel="stylesheet" />
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="images/Default_Landlord.png" alt="Logo">
+            <h2>DASHBOARD</h2>
+        </div>
+
+        <nav>
+            <button class="nav-btn active">Manage Apartment</button>
+            <button class="nav-btn">List of Tenants</button>
+            <button class="nav-btn">Transaction History</button>
+        </nav>
+
+        <div class="bottom-section">
+            <button class="account-btn">
+                <span class="icon">👤</span>
+                Account
+            </button>
+            <button class="logout-btn" @onclick="Logout">
+                <span class="icon">↩</span>
+                Log out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <div class="stats">
+                <span>Total Units: <strong>6</strong></span>
+                <span>Available: <strong>2</strong></span>
+                <span>Occupied: <strong>4</strong></span>
+            </div>
+            <button class="add-btn">+ Add unit</button>
+        </div>
+
+        <div class="units-grid">
+            @for (int i = 1; i <= 6; i++)
+            {
+                <div class="unit-card">
+                    <div class="unit-info">
+                        <h4>Unit @i</h4>
+                        <p>Status: @(i <= 4 ? "Occupied" : "Available")</p>
+                    </div>
+                    <button class="edit-btn">Edit</button>
+                </div>
+            }
+        </div>
+    </main>
+</div>
+@code {
+    private void Logout()
+    {
+        Navigation.NavigateTo("/Landlord", true);
+    }
+}

@@ -1,0 +1,48 @@
+﻿@page "/dashboard"
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+<link href="css/dashboard.css" rel="stylesheet" />
+<div class="dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="left-section">
+            <img src="images/Default_Landlord.png" alt="Logo" class="logo" />
+            <div>
+                <h1>TENANT DASHBOARD</h1>
+                <p>Welcome back</p>
+            </div>
+        </div>
+        <div class="center-section">
+            <div class="search-bar">
+                <input type="text" placeholder="Search" />
+                <button><i class="fa fa-search"></i></button>
+            </div>
+        </div>
+        <div class="right-section">
+            <div class="account">
+                <i class="fa fa-user-circle"></i>
+                <span>Account</span>
+            </div>
+        </div>
+    </header>
+    <!-- Apartments Grid -->
+    <main class="apartments-grid">
+        @for (int i = 0; i < 6; i++)
+        {
+            <div class="apartment-card">
+                <div class="image-placeholder"></div>
+                <div class="info">
+                    <p><strong>Location:</strong></p>
+                    <p><strong>Name of Apartment:</strong></p>
+                </div>
+                <button class="view-btn" @onclick="() => ViewApartment()">View</button>
+            </div>
+        }
+    </main>
+</div>
+@code {
+    private void ViewApartment()
+    {
+        Navigation.NavigateTo("/ViewApartment");
+    }
+}
