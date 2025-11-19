@@ -1,0 +1,322 @@
+﻿@using Test3.Data.Models
+@using Test3.Data.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject RoomService RoomService
+@inject ImageService ImageService
+
+<div class="modal-overlay @(IsVisible ? "visible" : "")">
+    <div class="modal-content unit-modal">
+        <div class="modal-header">
+            <h3>@(IsEditing ? "Edit Unit" : "Add Unit")</h3>
+            <button class="close-btn" @onclick="CloseModal">×</button>
+        </div>
+
+        <div class="modal-body">
+            @if (isLoading)
+            {
+                <div class="loading">Loading unit data...</div>
+            }
+            else
+            {
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Unit Number:</label>
+                        <input @bind="CurrentRoom.UnitNumber" class="text-input" placeholder="e.g., Unit 101" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Monthly Rent (₱):</label>
+                        <input type="number" @bind="CurrentRoom.RoomPrice" class="text-input" placeholder="0.00" step="0.01" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Bed Count:</label>
+                        <select @bind="CurrentRoom.BedCount" class="select-input">
+                            <option value="1">1 Bed</option>
+                            <option value="2">2 Beds</option>
+                            <option value="3">3 Beds</option>
+                            <option value="4">4 Beds</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Room Type:</label>
+                        <select @bind="CurrentRoom.RoomType" class="select-input">
+                            <option value="Single">Single</option>
+                            <option value="Double">Double</option>
+                            <option value="Studio">Studio</option>
+                            <option value="Suite">Suite</option>
+                            <option value="Executive">Executive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select @bind="CurrentRoom.Status" class="select-input">
+                            <option value="Available">Available</option>
+                            <option value="Occupied">Occupied</option>
+                            <option value="Maintenance">Maintenance</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" @bind="CurrentRoom.Aircon" />
+                            <span class="checkmark"></span>
+                            Air Conditioning
+                        </label>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Description:</label>
+                        <textarea @bind="CurrentRoom.Description" class="text-input textarea"
+                                  placeholder="Enter room description..." rows="3"></textarea>
+                    </div>
+
+                    <!-- Unit Image Upload -->
+                    <div class="form-group full-width">
+                        <label>Unit Image:</label>
+                        <div class="image-upload-small">
+                            @if (!string.IsNullOrEmpty(currentImageSrc))
+                            {
+                                <div class="image-preview-small">
+                                    <img src="@currentImageSrc" alt="Unit image" class="preview-image-small" />
+                                    <button type="button" class="remove-image-btn-small" @onclick="RemoveUnitImage">Remove</button>
+                                </div>
+                            }
+
+                            <div class="file-upload-area-small">
+                                <InputFile accept=".png,.jpg,.jpeg"
+                                           OnChange="HandleUnitImageSelected"
+                                           class="file-input-small"
+                                           id="unitFileInput" />
+                                <label for="unitFileInput" class="file-input-label-small">
+                                    <span>+ Choose Unit Image</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(saveMessage))
+                {
+                    <div class="save-message @(isError ? "error" : "success")">@saveMessage</div>
+                }
+            }
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" @onclick="CloseModal" disabled="@isSaving">Cancel</button>
+            <button class="btn-save" @onclick="SaveUnit" disabled="@isSaving">
+                @if (isSaving)
+                {
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Unit</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    [Parameter]
+    public Room? Room { get; set; }
+
+    [Parameter]
+    public EventCallback<Room> OnUnitSaved { get; set; }
+
+    [Parameter]
+    public string ApartmentId { get; set; } = string.Empty;
+
+    private Room CurrentRoom = new();
+    private bool isLoading = false;
+    private bool isSaving = false;
+    private string saveMessage = "";
+    private bool isError = false;
+    private bool IsEditing => Room?.Id != null;
+    private string currentImageSrc = "";
+    private IBrowserFile? selectedUnitFile;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && Room != null)
+        {
+            LoadRoomData();
+        }
+    }
+
+    private void LoadRoomData()
+    {
+        if (Room != null)
+        {
+            CurrentRoom = new Room
+            {
+                Id = Room.Id,
+                ApartmentId = Room.ApartmentId,
+                UnitNumber = Room.UnitNumber,
+                RoomType = Room.RoomType,
+                RoomPrice = Room.RoomPrice,
+                BedCount = Room.BedCount,
+                Aircon = Room.Aircon,
+                Status = Room.Status,
+                Description = Room.Description,
+                ImageData = Room.ImageData,
+                ImageContentType = Room.ImageContentType,
+                ImageFileName = Room.ImageFileName
+            };
+
+            if (Room.ImageData != null)
+            {
+                currentImageSrc = ImageService.GetImageSrc(Room.ImageData, Room.ImageContentType);
+            }
+            else
+            {
+                currentImageSrc = "";
+            }
+        }
+        else
+        {
+            CurrentRoom = new Room
+            {
+                ApartmentId = ApartmentId,
+                UnitNumber = "",
+                RoomType = "Single",
+                RoomPrice = 0,
+                BedCount = 1,
+                Aircon = false,
+                Status = "Available",
+                Description = ""
+            };
+            currentImageSrc = "";
+        }
+
+        selectedUnitFile = null;
+        saveMessage = "";
+        isError = false;
+    }
+
+    private async Task CloseModal()
+    {
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleUnitImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedUnitFile = e.File;
+
+        // Preview the image
+        if (selectedUnitFile != null)
+        {
+            var resizedImageFile = await selectedUnitFile.RequestImageFileAsync("image/png", 200, 200);
+            var buffer = new byte[resizedImageFile.Size];
+            await resizedImageFile.OpenReadStream().ReadAsync(buffer);
+            currentImageSrc = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
+        }
+
+        StateHasChanged();
+    }
+
+    private void RemoveUnitImage()
+    {
+        CurrentRoom.ImageData = null;
+        CurrentRoom.ImageContentType = "";
+        CurrentRoom.ImageFileName = "";
+        currentImageSrc = "";
+        selectedUnitFile = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveUnit()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentRoom.UnitNumber))
+        {
+            saveMessage = "Unit number is required.";
+            isError = true;
+            return;
+        }
+
+        isSaving = true;
+        saveMessage = "";
+        isError = false;
+        StateHasChanged();
+
+        try
+        {
+            // Process image upload if a file was selected
+            if (selectedUnitFile != null)
+            {
+                try
+                {
+                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(selectedUnitFile);
+                    CurrentRoom.ImageData = imageData;
+                    CurrentRoom.ImageContentType = contentType;
+                    CurrentRoom.ImageFileName = fileName;
+                }
+                catch (Exception ex)
+                {
+                    saveMessage = ex.Message;
+                    isError = true;
+                    isSaving = false;
+                    StateHasChanged();
+                    return;
+                }
+            }
+
+            if (IsEditing)
+            {
+                // Update existing room
+                await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
+                saveMessage = "Unit updated successfully!";
+            }
+            else
+            {
+                // Create new room
+                var newRoom = await RoomService.CreateRoomAsync(ApartmentId);
+                // Update the new room with the entered data
+                newRoom.UnitNumber = CurrentRoom.UnitNumber;
+                newRoom.RoomType = CurrentRoom.RoomType;
+                newRoom.RoomPrice = CurrentRoom.RoomPrice;
+                newRoom.BedCount = CurrentRoom.BedCount;
+                newRoom.Aircon = CurrentRoom.Aircon;
+                newRoom.Status = CurrentRoom.Status;
+                newRoom.Description = CurrentRoom.Description;
+                newRoom.ImageData = CurrentRoom.ImageData;
+                newRoom.ImageContentType = CurrentRoom.ImageContentType;
+                newRoom.ImageFileName = CurrentRoom.ImageFileName;
+
+                await RoomService.UpdateRoomAsync(newRoom.Id, newRoom);
+                CurrentRoom = newRoom;
+                saveMessage = "Unit created successfully!";
+            }
+
+            isError = false;
+
+            // Notify parent component
+            await OnUnitSaved.InvokeAsync(CurrentRoom);
+
+            // Close modal after delay
+            await Task.Delay(1500);
+            await CloseModal();
+        }
+        catch (Exception ex)
+        {
+            saveMessage = "Error saving unit. Please try again.";
+            isError = true;
+            Console.WriteLine($"Error saving unit: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

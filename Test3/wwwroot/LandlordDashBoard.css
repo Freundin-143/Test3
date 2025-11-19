@@ -305,3 +305,81 @@ h1, h2, h3, h4, h5, h6 {
 p, span, div {
     font-family: 'Archivo Black', sans-serif;
 }
+
+.unit-image {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.apartment-image, .image-placeholder {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-placeholder {
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #dee2e6;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.apartment-image {
+    border: 1px solid #e9ecef;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+}
+
+    .delete-btn:hover {
+        background: #c82333;
+    }
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.1rem;
+    color: #64748B;
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.1rem;
+    color: #dc3545;
+    background: #f8d7da;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.no-apartments {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+}

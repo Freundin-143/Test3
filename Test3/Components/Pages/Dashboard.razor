@@ -45,7 +45,21 @@
             @foreach (var apartment in apartments)
             {
                 <div class="apartment-card">
-                    <div class="image-placeholder"></div>
+                    <!-- Image Display - Replaces the placeholder -->
+                    <div class="image-container">
+                        @if (apartment.ImageData != null && apartment.ImageData.Length > 0)
+                        {
+                            <img src="data:@apartment.ImageContentType;base64,@Convert.ToBase64String(apartment.ImageData)"
+                                 alt="@apartment.ApartmentName"
+                                 class="apartment-image" />
+                        }
+                        else
+                        {
+                            <div class="image-placeholder">
+                                <span>No Image</span>
+                            </div>
+                        }
+                    </div>
                     <div class="info">
                         <p><strong>Location:</strong> @apartment.Address</p>
                         <p><strong>Name of Apartment:</strong> @apartment.ApartmentName</p>
@@ -108,9 +122,6 @@
     {
         Navigation.NavigateTo($"/ViewApartment/{id}");
     }
-
-
-
 
     public void Dispose()
     {

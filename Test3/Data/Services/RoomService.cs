@@ -18,16 +18,27 @@ namespace Test3.Data.Services
             return await _rooms.Find(x => x.ApartmentId == apartmentId).ToListAsync();
         }
 
-        // Get room by ID
-        public async Task<Room?> GetRoomByIdAsync(string id)
-        {
-            return await _rooms.Find(x => x.Id == id).FirstOrDefaultAsync();
-        }
-
         // Create new room
-        public async Task CreateRoomAsync(Room room)
+        public async Task<Room> CreateRoomAsync(string apartmentId)
         {
+            // Get existing rooms to determine next unit number
+            var existingRooms = await GetRoomsByApartmentIdAsync(apartmentId);
+            var nextUnitNumber = (existingRooms.Count + 1).ToString();
+
+            var room = new Room
+            {
+                ApartmentId = apartmentId,
+                UnitNumber = $"Unit {nextUnitNumber}",
+                RoomType = "Single",
+                RoomPrice = 0,
+                BedCount = 1,
+                Aircon = false,
+                Status = "Available",
+                Description = ""
+            };
+
             await _rooms.InsertOneAsync(room);
+            return room;
         }
 
         // Update room
@@ -40,6 +51,12 @@ namespace Test3.Data.Services
         public async Task DeleteRoomAsync(string id)
         {
             await _rooms.DeleteOneAsync(x => x.Id == id);
+        }
+
+        // Get room by ID
+        public async Task<Room?> GetRoomByIdAsync(string id)
+        {
+            return await _rooms.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
         // Get room statistics for an apartment
