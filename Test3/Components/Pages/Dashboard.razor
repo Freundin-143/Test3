@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<link href="css/dashboard.css" rel="stylesheet" />
+
 
 <div class="dashboard-container">
     <!-- Header -->
@@ -35,45 +35,47 @@
     </header>
 
     <!-- Apartments Grid -->
-    <main class="apartments-grid">
-        @if (isLoading)
-        {
-            <div class="loading">Loading apartments...</div>
-        }
-        else if (apartments.Any())
-        {
-            @foreach (var apartment in apartments)
+    <main class="main-content">
+        <div class="apartments-grid">
+            @if (isLoading)
             {
-                <div class="apartment-card">
-                    <!-- Image Display - Replaces the placeholder -->
-                    <div class="image-container">
-                        @if (apartment.ImageData != null && apartment.ImageData.Length > 0)
-                        {
-                            <img src="data:@apartment.ImageContentType;base64,@Convert.ToBase64String(apartment.ImageData)"
-                                 alt="@apartment.ApartmentName"
-                                 class="apartment-image" />
-                        }
-                        else
-                        {
-                            <div class="image-placeholder">
-                                <span>No Image</span>
-                            </div>
-                        }
+                <div class="loading">Loading apartments...</div>
+            }
+            else if (apartments.Any())
+            {
+                @foreach (var apartment in apartments)
+                {
+                    <div class="apartment-card">
+                        <!-- Image Display - Replaces the placeholder -->
+                        <div class="image-container">
+                            @if (apartment.ImageData != null && apartment.ImageData.Length > 0)
+                            {
+                                <img src="data:@apartment.ImageContentType;base64,@Convert.ToBase64String(apartment.ImageData)"
+                                     alt="@apartment.ApartmentName"
+                                     class="apartment-image" />
+                            }
+                            else
+                            {
+                                <div class="image-placeholder">
+                                    <span>No Image</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="info">
+                            <p><strong>Location:</strong> @apartment.Address</p>
+                            <p><strong>Name of Apartment:</strong> @apartment.ApartmentName</p>
+                        </div>
+                        <button class="view-btn" @onclick="() => ViewApartment(apartment.Id)">View</button>
                     </div>
-                    <div class="info">
-                        <p><strong>Location:</strong> @apartment.Address</p>
-                        <p><strong>Name of Apartment:</strong> @apartment.ApartmentName</p>
-                    </div>
-                    <button class="view-btn" @onclick="() => ViewApartment(apartment.Id)">View</button>
+                }
+            }
+            else
+            {
+                <div class="no-apartments">
+                    No apartments found. @(string.IsNullOrEmpty(searchTerm) ? "The database might be empty." : "Try a different search term.")
                 </div>
             }
-        }
-        else
-        {
-            <div class="no-apartments">
-                No apartments found. @(string.IsNullOrEmpty(searchTerm) ? "The database might be empty." : "Try a different search term.")
-            </div>
-        }
+        </div>
     </main>
 </div>
 
@@ -128,3 +130,4 @@
         searchTimer?.Dispose();
     }
 }
+

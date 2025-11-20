@@ -7,9 +7,9 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
-<link href="css/EditApartment.css" rel="stylesheet" />
 
 <div class="edit-container">
+    <!-- Your existing header and apartment form sections remain the same -->
     <div class="header">
         <button class="back-btn" @onclick="GoBack">←</button>
         <h2>EDIT APARTMENT</h2>
@@ -27,6 +27,7 @@
     else
     {
         <div class="form-grid">
+            <!-- Your existing apartment form fields -->
             <div>
                 <label>Apartment Name:</label>
                 <input @bind="apartment.ApartmentName" class="text-input" placeholder="Enter apartment name" />
@@ -53,10 +54,9 @@
             </div>
         </div>
 
+        <!-- Your existing apartment image upload section -->
         <div class="image-upload">
             <p><b>Apartment Image</b></p>
-
-            <!-- Current Image Preview -->
             @if (!string.IsNullOrEmpty(currentImageSrc))
             {
                 <div class="image-preview">
@@ -64,8 +64,6 @@
                     <button type="button" class="remove-image-btn" @onclick="RemoveImage">Remove Image</button>
                 </div>
             }
-
-            <!-- File Upload -->
             <div class="file-upload-area">
                 <InputFile accept=".png,.jpg,.jpeg"
                            OnChange="HandleFileSelected"
@@ -82,7 +80,6 @@
                     </div>
                 }
             </div>
-
             @if (!string.IsNullOrEmpty(uploadMessage))
             {
                 <div class="upload-message @(isUploadError ? "error" : "info")">@uploadMessage</div>
@@ -103,17 +100,27 @@
                 @foreach (var room in rooms)
                 {
                     <div class="unit-card" @key="room.Id">
-                        <div class="unit-image">
-                            @if (room.ImageData != null && room.ImageData.Length > 0)
+                        <!-- Stacked Image Preview -->
+                        <div class="unit-image-stack">
+                            @if (room.Images.Any())
                             {
-                                <img src="data:@room.ImageContentType;base64,@Convert.ToBase64String(room.ImageData)"
-                                     alt="@room.UnitNumber"
-                                     class="unit-preview-image" />
+                                <div class="stacked-images">
+                                    <div class="primary-image">
+                                        <img src="data:@room.Images[0].ImageContentType;base64,@Convert.ToBase64String(room.Images[0].ImageData)"
+                                             alt="@room.UnitNumber"
+                                             class="stacked-preview-image"
+                                             @onclick="() => ViewUnitImages(room)" />
+                                        @if (room.Images.Count > 1)
+                                        {
+                                            <div class="image-counter">+@(room.Images.Count - 1) more</div>
+                                        }
+                                    </div>
+                                </div>
                             }
                             else
                             {
-                                <div class="unit-image-placeholder">
-                                    <span>No Image</span>
+                                <div class="unit-image-placeholder" @onclick="() => ViewUnitImages(room)">
+                                    <span>No Images</span>
                                 </div>
                             }
                         </div>
@@ -124,12 +131,11 @@
                             <p><strong>Beds:</strong> @room.BedCount</p>
                             <p><strong>Aircon:</strong> @(room.Aircon ? "Yes" : "No")</p>
                             <p><strong>Status:</strong> <span class="status-@room.Status.ToLower()">@room.Status</span></p>
-                            @if (!string.IsNullOrEmpty(room.Description))
-                            {
-                                <p><strong>Description:</strong> @room.Description</p>
-                            }
                         </div>
-                        <button class="edit-unit-btn" @onclick="() => EditUnit(room)">Edit Unit</button>
+                        <div class="unit-actions">
+                            <button class="edit-unit-btn" @onclick="() => EditUnit(room)">Edit Unit</button>
+                            <button class="delete-unit-btn" @onclick="() => ShowDeleteConfirmation(room)">Delete</button>
+                        </div>
                     </div>
                 }
             }
@@ -161,118 +167,73 @@
     }
 </div>
 
-<!-- Edit Unit Modal -->
-@if (showUnitModal)
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal)
 {
     <div class="modal-overlay visible">
-        <div class="modal-content unit-modal">
+        <div class="modal-content delete-modal">
             <div class="modal-header">
-                <h3>@(selectedRoom?.Id != null ? "Edit Unit" : "Add Unit")</h3>
-                <button class="close-btn" @onclick="CloseUnitModal">×</button>
+                <h3>Confirm Delete</h3>
+                <button class="close-btn" @onclick="CancelDelete">×</button>
             </div>
-
             <div class="modal-body">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Unit Number:</label>
-                        <input @bind="currentRoom.UnitNumber" class="text-input" placeholder="e.g., Unit 101" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Monthly Rent (₱):</label>
-                        <input type="number" @bind="currentRoom.RoomPrice" class="text-input" placeholder="0.00" step="0.01" />
-                    </div>
-
-                    <div class="form-group">
-                        <label>Bed Count:</label>
-                        <select @bind="currentRoom.BedCount" class="select-input">
-                            <option value="1">1 Bed</option>
-                            <option value="2">2 Beds</option>
-                            <option value="3">3 Beds</option>
-                            <option value="4">4 Beds</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Room Type:</label>
-                        <select @bind="currentRoom.RoomType" class="select-input">
-                            <option value="Single">Single</option>
-                            <option value="Double">Double</option>
-                            <option value="Studio">Studio</option>
-                            <option value="Suite">Suite</option>
-                            <option value="Executive">Executive</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Status:</label>
-                        <select @bind="currentRoom.Status" class="select-input">
-                            <option value="Available">Available</option>
-                            <option value="Occupied">Occupied</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" @bind="currentRoom.Aircon" />
-                            <span class="checkmark"></span>
-                            Air Conditioning
-                        </label>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Description:</label>
-                        <textarea @bind="currentRoom.Description" class="text-input textarea"
-                                  placeholder="Enter room description..." rows="3"></textarea>
-                    </div>
-
-                    <!-- Unit Image Upload -->
-                    <div class="form-group full-width">
-                        <label>Unit Image:</label>
-                        <div class="image-upload-small">
-                            @if (!string.IsNullOrEmpty(currentUnitImageSrc))
-                            {
-                                <div class="image-preview-small">
-                                    <img src="@currentUnitImageSrc" alt="Unit image" class="preview-image-small" />
-                                    <button type="button" class="remove-image-btn-small" @onclick="RemoveUnitImage">Remove</button>
-                                </div>
-                            }
-
-                            <div class="file-upload-area-small">
-                                <InputFile accept=".png,.jpg,.jpeg"
-                                           OnChange="HandleUnitImageSelected"
-                                           class="file-input-small"
-                                           id="unitFileInput" />
-                                <label for="unitFileInput" class="file-input-label-small">
-                                    <span>+ Choose Unit Image</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                @if (!string.IsNullOrEmpty(unitSaveMessage))
-                {
-                    <div class="save-message @(isUnitError ? "error" : "success")">@unitSaveMessage</div>
-                }
+                <div class="warning-icon">⚠️</div>
+                <p>Are you sure you want to delete unit <strong>@unitToDelete?.UnitNumber</strong>?</p>
+                <p class="warning-text">This action cannot be undone and will permanently delete the unit and all its data.</p>
             </div>
-
             <div class="modal-footer">
-                <button class="btn-cancel" @onclick="CloseUnitModal" disabled="@isUnitSaving">Cancel</button>
-                <button class="btn-save" @onclick="SaveUnit" disabled="@isUnitSaving">
-                    @if (isUnitSaving)
+                <button class="btn-cancel" @onclick="CancelDelete" disabled="@isDeleting">Cancel</button>
+                <button class="btn-delete" @onclick="ConfirmDelete" disabled="@isDeleting">
+                    @if (isDeleting)
                     {
-                        <span>Saving...</span>
+                        <span>Deleting...</span>
                     }
                     else
                     {
-                        <span>Save Unit</span>
+                        <span>Delete Unit</span>
                     }
                 </button>
             </div>
         </div>
     </div>
+}
+
+<!-- Unit Images Modal -->
+@if (showImagesModal && selectedRoomForImages != null)
+{
+    <div class="modal-overlay visible">
+        <div class="modal-content images-modal">
+            <div class="modal-header">
+                <h3>Unit @selectedRoomForImages.UnitNumber - Images</h3>
+                <button class="close-btn" @onclick="CloseImagesModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="images-grid">
+                    @foreach (var image in selectedRoomForImages.Images)
+                    {
+                        <div class="image-item">
+                            <img src="data:@image.ImageContentType;base64,@Convert.ToBase64String(image.ImageData)"
+                                 alt="Unit image"
+                                 class="modal-image" />
+                        </div>
+                    }
+                </div>
+                @if (!selectedRoomForImages.Images.Any())
+                {
+                    <div class="no-images">No images available for this unit.</div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit Unit Modal -->
+@if (showUnitModal)
+{
+    <EditUnitModal @bind-IsVisible="showUnitModal"
+                   Room="selectedRoom"
+                   ApartmentId="@ApartmentId"
+                   OnUnitSaved="HandleUnitSaved" />
 }
 
 @code {
@@ -297,12 +258,15 @@
     // Unit Management
     private bool showUnitModal = false;
     private Room? selectedRoom = null;
-    private Room currentRoom = new();
-    private bool isUnitSaving = false;
-    private string unitSaveMessage = "";
-    private bool isUnitError = false;
-    private string currentUnitImageSrc = "";
-    private IBrowserFile? selectedUnitFile;
+
+    // Delete Confirmation
+    private bool showDeleteModal = false;
+    private Room? unitToDelete = null;
+    private bool isDeleting = false;
+
+    // Images Modal
+    private bool showImagesModal = false;
+    private Room? selectedRoomForImages = null;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -324,7 +288,6 @@
             apartment = await ApartmentService.GetApartmentByIdAsync(ApartmentId);
             if (apartment != null)
             {
-                // Load rooms for this apartment
                 rooms = await RoomService.GetRoomsByApartmentIdAsync(ApartmentId);
 
                 if (apartment?.ImageData != null)
@@ -344,28 +307,12 @@
         }
     }
 
-    private async Task AddNewUnit()
+    private void AddNewUnit()
     {
         try
         {
-            // Create a new room with default values in the database
-            var newRoom = await RoomService.CreateRoomAsync(ApartmentId);
-
-            // Open the modal to edit the new room
-            selectedRoom = newRoom;
-            currentRoom = new Room
-            {
-                Id = newRoom.Id,
-                ApartmentId = newRoom.ApartmentId,
-                UnitNumber = newRoom.UnitNumber,
-                RoomType = newRoom.RoomType,
-                RoomPrice = newRoom.RoomPrice,
-                BedCount = newRoom.BedCount,
-                Aircon = newRoom.Aircon,
-                Status = newRoom.Status,
-                Description = newRoom.Description
-            };
-
+            // Just open the modal without creating any temporary objects
+            selectedRoom = null; // This indicates we're creating a new room
             showUnitModal = true;
             StateHasChanged();
         }
@@ -378,132 +325,85 @@
     private void EditUnit(Room room)
     {
         selectedRoom = room;
-        currentRoom = new Room
-        {
-            Id = room.Id,
-            ApartmentId = room.ApartmentId,
-            UnitNumber = room.UnitNumber,
-            RoomType = room.RoomType,
-            RoomPrice = room.RoomPrice,
-            BedCount = room.BedCount,
-            Aircon = room.Aircon,
-            Status = room.Status,
-            Description = room.Description,
-            ImageData = room.ImageData,
-            ImageContentType = room.ImageContentType,
-            ImageFileName = room.ImageFileName
-        };
-
-        if (room.ImageData != null)
-        {
-            currentUnitImageSrc = ImageService.GetImageSrc(room.ImageData, room.ImageContentType);
-        }
-        else
-        {
-            currentUnitImageSrc = "";
-        }
-
         showUnitModal = true;
         StateHasChanged();
     }
 
-    private void CloseUnitModal()
+    private void ShowDeleteConfirmation(Room room)
     {
-        showUnitModal = false;
-        selectedRoom = null;
-        currentRoom = new Room();
-        currentUnitImageSrc = "";
-        selectedUnitFile = null;
-        unitSaveMessage = "";
+        unitToDelete = room;
+        showDeleteModal = true;
         StateHasChanged();
     }
 
-    private async Task HandleUnitImageSelected(InputFileChangeEventArgs e)
+    private void CancelDelete()
     {
-        selectedUnitFile = e.File;
-
-        // Preview the image
-        if (selectedUnitFile != null)
-        {
-            var resizedImageFile = await selectedUnitFile.RequestImageFileAsync("image/png", 200, 200);
-            var buffer = new byte[resizedImageFile.Size];
-            await resizedImageFile.OpenReadStream().ReadAsync(buffer);
-            currentUnitImageSrc = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
-        }
-
+        showDeleteModal = false;
+        unitToDelete = null;
+        isDeleting = false;
         StateHasChanged();
     }
 
-    private void RemoveUnitImage()
+    private async Task ConfirmDelete()
     {
-        currentRoom.ImageData = null;
-        currentRoom.ImageContentType = "";
-        currentRoom.ImageFileName = "";
-        currentUnitImageSrc = "";
-        selectedUnitFile = null;
-        StateHasChanged();
-    }
+        if (unitToDelete == null) return;
 
-    private async Task SaveUnit()
-    {
-        if (string.IsNullOrWhiteSpace(currentRoom.UnitNumber))
-        {
-            unitSaveMessage = "Unit number is required.";
-            isUnitError = true;
-            StateHasChanged();
-            return;
-        }
-
-        isUnitSaving = true;
-        unitSaveMessage = "";
-        isUnitError = false;
+        isDeleting = true;
         StateHasChanged();
 
         try
         {
-            // Process image upload if a file was selected
-            if (selectedUnitFile != null)
-            {
-                try
-                {
-                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(selectedUnitFile);
-                    currentRoom.ImageData = imageData;
-                    currentRoom.ImageContentType = contentType;
-                    currentRoom.ImageFileName = fileName;
-                }
-                catch (Exception ex)
-                {
-                    unitSaveMessage = ex.Message;
-                    isUnitError = true;
-                    isUnitSaving = false;
-                    StateHasChanged();
-                    return;
-                }
-            }
+            await RoomService.DeleteRoomAsync(unitToDelete.Id);
 
-            // Update the room in the database
-            await RoomService.UpdateRoomAsync(currentRoom.Id, currentRoom);
-            unitSaveMessage = "Unit saved successfully!";
-            isUnitError = false;
+            // Remove from local list
+            rooms.RemoveAll(r => r.Id == unitToDelete.Id);
 
-            // Refresh the rooms list
-            await LoadApartment();
+            showDeleteModal = false;
+            unitToDelete = null;
 
-            // Close modal after delay
-            await Task.Delay(1500);
-            CloseUnitModal();
+            // Show success message
+            saveMessage = "Unit deleted successfully!";
+            isError = false;
+
+            StateHasChanged();
+
+            // Clear success message after delay
+            await Task.Delay(2000);
+            saveMessage = "";
+            StateHasChanged();
         }
         catch (Exception ex)
         {
-            unitSaveMessage = "Error saving unit. Please try again.";
-            isUnitError = true;
-            Console.WriteLine($"Error saving unit: {ex.Message}");
+            saveMessage = "Error deleting unit. Please try again.";
+            isError = true;
+            Console.WriteLine($"Error deleting unit: {ex.Message}");
         }
         finally
         {
-            isUnitSaving = false;
+            isDeleting = false;
             StateHasChanged();
         }
+    }
+
+    private void ViewUnitImages(Room room)
+    {
+        selectedRoomForImages = room;
+        showImagesModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseImagesModal()
+    {
+        showImagesModal = false;
+        selectedRoomForImages = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleUnitSaved(Room savedRoom)
+    {
+        // Refresh the entire list from database to include the new room
+        await LoadApartment();
+        StateHasChanged();
     }
 
     // Your existing methods remain the same
@@ -545,7 +445,6 @@
 
         try
         {
-            // Process image upload if a file was selected
             if (selectedFile != null)
             {
                 try
@@ -596,6 +495,5 @@
         else
         {
             Navigation.NavigateTo("/ManageApartment");
-        }
-    }
+        }    }
 }

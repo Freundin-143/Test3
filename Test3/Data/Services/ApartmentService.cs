@@ -120,5 +120,39 @@ namespace Test3.Data.Services
 
             Console.WriteLine("Finished assigning apartments to landlords");
         }
+        public async Task<bool> DeleteApartmentCascadeAsync(string apartmentId)
+        {
+            using var session = await _apartments.Database.Client.StartSessionAsync();
+            session.StartTransaction();
+
+            try
+            {
+                // 1. Delete all rooms associated with the apartment
+                var roomsCollection = _apartments.Database.GetCollection<Room>("Rooms");
+                var deleteRoomsResult = await roomsCollection.DeleteManyAsync(
+                    session,
+                    Builders<Room>.Filter.Eq(r => r.ApartmentId, apartmentId)
+                );
+
+                Console.WriteLine($"Deleted {deleteRoomsResult.DeletedCount} rooms for apartment {apartmentId}");
+
+                // 2. Delete the apartment itself
+                var deleteApartmentResult = await _apartments.DeleteOneAsync(
+                    session,
+                    Builders<Apartment>.Filter.Eq(a => a.Id, apartmentId)
+                );
+
+                // 3. Commit transaction
+                await session.CommitTransactionAsync();
+
+                return deleteApartmentResult.DeletedCount > 0;
+            }
+            catch (Exception ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"Error in cascade delete for apartment {apartmentId}: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

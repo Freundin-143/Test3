@@ -1,7 +1,7 @@
 ﻿@page "/TransacHis"
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
-<link href="css/LandlordDashBoard.css" rel="stylesheet" />
+
 <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -28,23 +28,80 @@
             </button>
         </div>
     </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Name of Tenant</th>
+                        <th>Unit#</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Tenants.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">No tenants found.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var tenant in Tenants.Select((value, index) => new { value, index }))
+                        {
+                            <tr>
+                                <td>@(tenant.index + 1)</td>
+                                <td>@tenant.value.FullName</td>
+                                <td>@tenant.value.UnitNumber</td>
+
+                                <td>@tenant.value.Contact</td>
+                                <td>@tenant.value.Date.ToShortDateString()</td>
+
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 // Test
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "landlordId")]
+    public string? LandlordId { get; set; }
+
+
+    public class TenantModel
+    {
+        public string FullName { get; set; }
+        public int UnitNumber { get; set; }
+        public string Contact { get; set; }
+        public DateTime Date { get; set; } = DateTime.Now;
+    }
+
+    private List<TenantModel> Tenants = new();
+
     private void Logout()
     {
         Navigation.NavigateTo("/Landlord", true);
     }
     private void ManageApartment()
     {
-        Navigation.NavigateTo("/ManageApartment", true);
+        Navigation.NavigateTo($"/ManageApartment?landlordId={LandlordId}", true);
     }
+
     private void ListofTenants()
     {
-        Navigation.NavigateTo("/ListTenants", true);
+        Navigation.NavigateTo($"/ListTenants?landlordId={LandlordId}", true);
     }
+
     private void TransacHistory()
     {
-        Navigation.NavigateTo("/TransacHis", true);
+        Navigation.NavigateTo($"/TransacHis?landlordId={LandlordId}", true);
     }
 }

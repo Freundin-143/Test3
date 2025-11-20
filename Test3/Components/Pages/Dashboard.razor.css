@@ -2,15 +2,16 @@
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8f8f8;
+    height: 100vh;
 }
 
 .dashboard-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
-/* HEADER */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -18,6 +19,7 @@
     background-color: #ddd;
     padding: 1rem 2rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink: 0;
 }
 
     .dashboard-header .left-section {
@@ -37,6 +39,7 @@
     .dashboard-header h1 {
         margin: 0;
         font-size: 1.2rem;
+        white-space: nowrap;
     }
 
     .dashboard-header p {
@@ -58,24 +61,31 @@
     background-color: white;
     border-radius: 60px;
     overflow: hidden;
-    width: 300px;
-    height: 36px;
+    width: 500px;
+    height: 45px;
     box-shadow: 0 0 3px rgba(0,0,0,0.2);
+    border: none;
 }
 
     .search-bar input {
         border: none;
         outline: none;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 1.5rem;
         width: 100%;
         font-size: 1rem;
+        background: white;
     }
+
+        .search-bar input::placeholder {
+            color: #666;
+            font-style: italic;
+        }
 
     .search-bar button {
         border: none;
-        background: none;
+        background: white;
         cursor: pointer;
-        padding: 0 0.8rem;
+        padding: 0 1.2rem;
         color: #444;
         font-size: 1.1rem;
     }
@@ -97,50 +107,119 @@
         font-size: 1.8rem;
     }
 
-/* MAIN GRID */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+}
+
 .apartments-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+    gap: 3rem;
     padding: 2rem;
 }
 
 .apartment-card {
     background: white;
     border-radius: 8px;
-    padding: 1rem;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    height: 340px;
+    min-height: 340px;
+    overflow: hidden;
+    position: relative;
 }
 
 .image-placeholder {
     background-color: #ccc;
-    height: 150px;
+    height: 200px;
+    width: 150px;
     border-radius: 6px;
     margin-bottom: 1rem;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-style: italic;
+    flex-shrink: 0;
+}
+
+    .image-placeholder::after {
+        content: "No image";
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        color: #666;
+    }
+
+.apartment-image {
+    width: calc(100% + 3rem);
+    height: 180px;
+    width: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+    margin-left: 0; /* Ensure no left margin */
+    margin-right: 0; /* Ensure no right margin */
+    margin-bottom: 1rem;
 }
 
 .info {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
 }
 
     .info p {
         margin: 0.3rem 0;
+        line-height: 1.4;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        height: 1.6em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        max-height: 4em;
     }
+
+        .info p strong {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+        }
 
 .view-btn {
     align-self: flex-end;
     background-color: #ccc;
     border: none;
     border-radius: 12px;
-    padding: 0.3rem 1rem;
+    padding: 0.6rem 1.4rem;
     cursor: pointer;
     font-weight: 500;
+    margin-top: auto;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
 }
 
     .view-btn:hover {
         background-color: #bbb;
     }
+
+.loading, .no-apartments {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.1rem;
+    color: #666;
+}
+
+

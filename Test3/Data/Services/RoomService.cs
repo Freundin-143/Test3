@@ -81,5 +81,32 @@ namespace Test3.Data.Services
             // Then get all rooms for these apartments
             return await _rooms.Find(x => landlordApartments.Contains(x.ApartmentId)).ToListAsync();
         }
+        // Add these methods to your existing RoomService
+        public async Task AddRoomImagesAsync(string roomId, List<RoomImage> images)
+        {
+            var filter = Builders<Room>.Filter.Eq(x => x.Id, roomId);
+            var update = Builders<Room>.Update.PushEach(x => x.Images, images);
+            await _rooms.UpdateOneAsync(filter, update);
+        }
+
+        public async Task RemoveRoomImageAsync(string roomId, int imageIndex)
+        {
+            var room = await GetRoomByIdAsync(roomId);
+            if (room != null && imageIndex >= 0 && imageIndex < room.Images.Count)
+            {
+                room.Images.RemoveAt(imageIndex);
+                await UpdateRoomAsync(roomId, room);
+            }
+        }
+
+        public async Task UpdateRoomImagesAsync(string roomId, List<RoomImage> images)
+        {
+            var room = await GetRoomByIdAsync(roomId);
+            if (room != null)
+            {
+                room.Images = images;
+                await UpdateRoomAsync(roomId, room);
+            }
+        }
     }
 }

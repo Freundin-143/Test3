@@ -1,6 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
-
-.screen-container {
+﻿.screen-container {
     width: 390px;
     height: 1026px;
     background-color: #64748B;
@@ -382,4 +380,23 @@ p, span, div {
     color: #6c757d;
     font-size: 1.1rem;
     grid-column: 1 / -1;
+}
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    width: 350px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }

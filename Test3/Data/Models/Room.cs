@@ -3,6 +3,21 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Test3.Data.Models
 {
+    public class RoomImage
+    {
+        [BsonElement("ImageData")]
+        public byte[] ImageData { get; set; } = Array.Empty<byte>();
+
+        [BsonElement("ImageContentType")]
+        public string ImageContentType { get; set; } = string.Empty;
+
+        [BsonElement("ImageFileName")]
+        public string ImageFileName { get; set; } = string.Empty;
+
+        [BsonElement("UploadedAt")]
+        public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+    }
+
     public class Room
     {
         [BsonId]
@@ -28,19 +43,14 @@ namespace Test3.Data.Models
         public bool Aircon { get; set; }
 
         [BsonElement("Status")]
-        public string Status { get; set; } = "Available"; // Available, Occupied, Maintenance
+        public string Status { get; set; } = "Available";
 
         [BsonElement("Description")]
         public string Description { get; set; } = string.Empty;
 
-        [BsonElement("ImageData")]
-        public byte[]? ImageData { get; set; }
-
-        [BsonElement("ImageContentType")]
-        public string ImageContentType { get; set; } = string.Empty;
-
-        [BsonElement("ImageFileName")]
-        public string ImageFileName { get; set; } = string.Empty;
+        // Updated: Support multiple images
+        [BsonElement("Images")]
+        public List<RoomImage> Images { get; set; } = new();
 
         [BsonElement("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -73,26 +73,67 @@
                                   placeholder="Enter room description..." rows="3"></textarea>
                     </div>
 
-                    <!-- Unit Image Upload -->
+                    <!-- Multiple Image Upload -->
                     <div class="form-group full-width">
-                        <label>Unit Image:</label>
-                        <div class="image-upload-small">
-                            @if (!string.IsNullOrEmpty(currentImageSrc))
+                        <label>Unit Images:</label>
+                        <div class="multiple-image-upload">
+                            <!-- Existing Images -->
+                            @if (CurrentRoom.Images.Any())
                             {
-                                <div class="image-preview-small">
-                                    <img src="@currentImageSrc" alt="Unit image" class="preview-image-small" />
-                                    <button type="button" class="remove-image-btn-small" @onclick="RemoveUnitImage">Remove</button>
+                                <div class="existing-images-grid">
+                                    <h4>Existing Images</h4>
+                                    <div class="images-grid">
+                                        @for (int i = 0; i < CurrentRoom.Images.Count; i++)
+                                        {
+                                            var image = CurrentRoom.Images[i];
+                                            <div class="image-item">
+                                                <img src="data:@image.ImageContentType;base64,@Convert.ToBase64String(image.ImageData)"
+                                                     alt="Unit image"
+                                                     class="preview-image-multiple" />
+                                                <button type="button" class="remove-existing-image-btn"
+                                                        @onclick="() => RemoveExistingImage(i)">
+                                                    ×
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             }
 
-                            <div class="file-upload-area-small">
-                                <InputFile accept=".png,.jpg,.jpeg"
-                                           OnChange="HandleUnitImageSelected"
-                                           class="file-input-small"
-                                           id="unitFileInput" />
-                                <label for="unitFileInput" class="file-input-label-small">
-                                    <span>+ Choose Unit Image</span>
-                                </label>
+                            <!-- New Image Upload -->
+                            <div class="new-images-section">
+                                <h4>Add New Images</h4>
+                                <div class="file-upload-area-multiple">
+                                    <InputFile accept=".png,.jpg,.jpeg"
+                                               OnChange="HandleMultipleFilesSelected"
+                                               class="file-input-multiple"
+                                               id="multipleFileInput"
+                                               multiple />
+                                    <label for="multipleFileInput" class="file-input-label-multiple">
+                                        <span>+ Choose Images (Multiple PNG, JPG, JPEG)</span>
+                                    </label>
+                                </div>
+
+                                <!-- New Images Preview -->
+                                @if (selectedFiles.Any())
+                                {
+                                    <div class="new-images-grid">
+                                        <div class="images-grid">
+                                            @foreach (var file in selectedFiles)
+                                            {
+                                                <div class="image-item">
+                                                    <img src="@GetImagePreviewUrl(file)"
+                                                         alt="New image"
+                                                         class="preview-image-multiple" />
+                                                    <button type="button" class="remove-new-image-btn"
+                                                            @onclick="() => RemoveNewImage(file)">
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -143,12 +184,16 @@
     private string saveMessage = "";
     private bool isError = false;
     private bool IsEditing => Room?.Id != null;
-    private string currentImageSrc = "";
-    private IBrowserFile? selectedUnitFile;
+    private bool isNewRoom => Room == null;
+
+
+    // Multiple image handling
+    private List<IBrowserFile> selectedFiles = new();
+    private Dictionary<IBrowserFile, string> imagePreviews = new();
 
     protected override void OnParametersSet()
     {
-        if (IsVisible && Room != null)
+        if (IsVisible)
         {
             LoadRoomData();
         }
@@ -158,6 +203,7 @@
     {
         if (Room != null)
         {
+            // Editing existing room
             CurrentRoom = new Room
             {
                 Id = Room.Id,
@@ -169,70 +215,75 @@
                 Aircon = Room.Aircon,
                 Status = Room.Status,
                 Description = Room.Description,
-                ImageData = Room.ImageData,
-                ImageContentType = Room.ImageContentType,
-                ImageFileName = Room.ImageFileName
+                Images = Room.Images?.ToList() ?? new List<RoomImage>()
             };
-
-            if (Room.ImageData != null)
-            {
-                currentImageSrc = ImageService.GetImageSrc(Room.ImageData, Room.ImageContentType);
-            }
-            else
-            {
-                currentImageSrc = "";
-            }
         }
         else
         {
+            // Creating new room - initialize with defaults
             CurrentRoom = new Room
             {
-                ApartmentId = ApartmentId,
                 UnitNumber = "",
                 RoomType = "Single",
                 RoomPrice = 0,
                 BedCount = 1,
                 Aircon = false,
                 Status = "Available",
-                Description = ""
+                Description = "",
+                Images = new List<RoomImage>()
             };
-            currentImageSrc = "";
         }
 
-        selectedUnitFile = null;
+        selectedFiles.Clear();
+        imagePreviews.Clear();
         saveMessage = "";
         isError = false;
     }
 
     private async Task CloseModal()
     {
+        // Just close the modal - no database operations needed for cancellation
         await IsVisibleChanged.InvokeAsync(false);
     }
 
-    private async Task HandleUnitImageSelected(InputFileChangeEventArgs e)
+    private async Task HandleMultipleFilesSelected(InputFileChangeEventArgs e)
     {
-        selectedUnitFile = e.File;
-
-        // Preview the image
-        if (selectedUnitFile != null)
+        foreach (var file in e.GetMultipleFiles())
         {
-            var resizedImageFile = await selectedUnitFile.RequestImageFileAsync("image/png", 200, 200);
-            var buffer = new byte[resizedImageFile.Size];
-            await resizedImageFile.OpenReadStream().ReadAsync(buffer);
-            currentImageSrc = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
-        }
+            if (!selectedFiles.Any(f => f.Name == file.Name))
+            {
+                selectedFiles.Add(file);
 
+                // Create preview
+                var resizedImageFile = await file.RequestImageFileAsync("image/png", 200, 200);
+                var buffer = new byte[resizedImageFile.Size];
+                await resizedImageFile.OpenReadStream().ReadAsync(buffer);
+                var previewUrl = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
+                imagePreviews[file] = previewUrl;
+            }
+        }
         StateHasChanged();
     }
 
-    private void RemoveUnitImage()
+    private string GetImagePreviewUrl(IBrowserFile file)
     {
-        CurrentRoom.ImageData = null;
-        CurrentRoom.ImageContentType = "";
-        CurrentRoom.ImageFileName = "";
-        currentImageSrc = "";
-        selectedUnitFile = null;
+        return imagePreviews.ContainsKey(file) ? imagePreviews[file] : "";
+    }
+
+    private void RemoveNewImage(IBrowserFile file)
+    {
+        selectedFiles.Remove(file);
+        imagePreviews.Remove(file);
         StateHasChanged();
+    }
+
+    private void RemoveExistingImage(int index)
+    {
+        if (index >= 0 && index < CurrentRoom.Images.Count)
+        {
+            CurrentRoom.Images.RemoveAt(index);
+            StateHasChanged();
+        }
     }
 
     private async Task SaveUnit()
@@ -251,19 +302,24 @@
 
         try
         {
-            // Process image upload if a file was selected
-            if (selectedUnitFile != null)
+            // Process new image uploads
+            var newImages = new List<RoomImage>();
+            foreach (var file in selectedFiles)
             {
                 try
                 {
-                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(selectedUnitFile);
-                    CurrentRoom.ImageData = imageData;
-                    CurrentRoom.ImageContentType = contentType;
-                    CurrentRoom.ImageFileName = fileName;
+                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(file);
+                    newImages.Add(new RoomImage
+                    {
+                        ImageData = imageData,
+                        ImageContentType = contentType,
+                        ImageFileName = fileName,
+                        UploadedAt = DateTime.UtcNow
+                    });
                 }
                 catch (Exception ex)
                 {
-                    saveMessage = ex.Message;
+                    saveMessage = $"Error processing {file.Name}: {ex.Message}";
                     isError = true;
                     isSaving = false;
                     StateHasChanged();
@@ -271,16 +327,17 @@
                 }
             }
 
-            if (IsEditing)
+            // Combine existing and new images
+            var allImages = isNewRoom ? newImages : CurrentRoom.Images.Concat(newImages).ToList();
+            CurrentRoom.Images = allImages;
+
+            Room savedRoom;
+
+            if (isNewRoom)
             {
-                // Update existing room
-                await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
-                saveMessage = "Unit updated successfully!";
-            }
-            else
-            {
-                // Create new room
+                // Create new room in database
                 var newRoom = await RoomService.CreateRoomAsync(ApartmentId);
+
                 // Update the new room with the entered data
                 newRoom.UnitNumber = CurrentRoom.UnitNumber;
                 newRoom.RoomType = CurrentRoom.RoomType;
@@ -289,19 +346,24 @@
                 newRoom.Aircon = CurrentRoom.Aircon;
                 newRoom.Status = CurrentRoom.Status;
                 newRoom.Description = CurrentRoom.Description;
-                newRoom.ImageData = CurrentRoom.ImageData;
-                newRoom.ImageContentType = CurrentRoom.ImageContentType;
-                newRoom.ImageFileName = CurrentRoom.ImageFileName;
+                newRoom.Images = CurrentRoom.Images;
 
                 await RoomService.UpdateRoomAsync(newRoom.Id, newRoom);
-                CurrentRoom = newRoom;
+                savedRoom = newRoom;
                 saveMessage = "Unit created successfully!";
+            }
+            else
+            {
+                // Update existing room
+                await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
+                savedRoom = CurrentRoom;
+                saveMessage = "Unit updated successfully!";
             }
 
             isError = false;
 
             // Notify parent component
-            await OnUnitSaved.InvokeAsync(CurrentRoom);
+            await OnUnitSaved.InvokeAsync(savedRoom);
 
             // Close modal after delay
             await Task.Delay(1500);

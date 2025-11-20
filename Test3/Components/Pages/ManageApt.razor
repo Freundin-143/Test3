@@ -5,8 +5,6 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<link href="css/LandlordDashBoard.css" rel="stylesheet" />
-
 <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -101,7 +99,12 @@
         <div class="modal-content">
             <h3>Confirm Delete</h3>
             <p>Are you sure you want to delete apartment <strong>@apartmentToDelete?.ApartmentName</strong>?</p>
-            <p class="warning-text">This action cannot be undone and will permanently delete the apartment and all its data.</p>
+            <p class="warning-text">
+                This action cannot be undone and will permanently delete:
+                <br />• The apartment and all its information
+                <br />• All units/rooms associated with this apartment
+                <br />• All data related to those units
+            </p>
             <div class="modal-actions">
                 <button class="btn-cancel" @onclick="CancelDelete">Cancel</button>
                 <button class="btn-delete" @onclick="ConfirmDelete">Delete Permanently</button>
@@ -120,6 +123,10 @@
     private bool showDeleteModal = false;
     private Apartment? apartmentToDelete;
     private string errorMessage = "";
+
+    private bool isDeleting = false;
+    private string saveMessage = string.Empty;
+    private bool isError = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -202,17 +209,48 @@
     {
         if (apartmentToDelete != null)
         {
+            isDeleting = true;
+            StateHasChanged();
+
             try
             {
-                await ApartmentService.DeleteApartmentAsync(apartmentToDelete.Id);
-                showDeleteModal = false;
-                apartmentToDelete = null;
-                await LoadApartments(); // Refresh the list
+                // Use cascade delete instead of regular delete
+                var success = await ApartmentService.DeleteApartmentCascadeAsync(apartmentToDelete.Id);
+
+                if (success)
+                {
+                    showDeleteModal = false;
+                    apartmentToDelete = null;
+
+                    // Show success message
+                    saveMessage = "Apartment and all associated units deleted successfully!";
+                    isError = false;
+
+                    await LoadApartments(); // Refresh the list
+
+                    StateHasChanged();
+
+                    // Clear success message after delay
+                    await Task.Delay(3000);
+                    saveMessage = "";
+                    StateHasChanged();
+                }
+                else
+                {
+                    saveMessage = "Failed to delete apartment. Please try again.";
+                    isError = true;
+                }
             }
             catch (Exception ex)
             {
-                errorMessage = "Error deleting apartment. Please try again.";
-                Console.WriteLine($"Error deleting apartment: {ex.Message}");
+                saveMessage = "Error deleting apartment and its units. Please try again.";
+                isError = true;
+                Console.WriteLine($"Error in cascade delete: {ex.Message}");
+            }
+            finally
+            {
+                isDeleting = false;
+                StateHasChanged();
             }
         }
     }
