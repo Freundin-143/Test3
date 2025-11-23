@@ -1,11 +1,9 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @using Test3.Data.Models
 @using Test3.Data.Services
 @inject ApartmentService ApartmentService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
-
-
 
 <div class="dashboard-container">
     <!-- Header -->
@@ -22,11 +20,13 @@
                 <input type="text"
                        placeholder="Search by apartment name or location"
                        @bind="searchTerm"
-                       @bind:event="oninput" />
+                       @bind:event="oninput" />  
                 <button><i class="fa fa-search"></i></button>
             </div>
         </div>
         <div class="right-section">
+            <button class="bill_btn" @onclick="ViewBill">View Bill</button>
+
             <div class="account">
                 <i class="fa fa-user-circle"></i>
                 <span>Account</span>
@@ -120,6 +120,10 @@
         }, null, 300, Timeout.Infinite);
     }
 
+    void ViewBill()
+    {
+        Navigation.NavigateTo($"/payments");
+    }
     void ViewApartment(string id)
     {
         Navigation.NavigateTo($"/ViewApartment/{id}");
@@ -130,4 +134,3 @@
         searchTimer?.Dispose();
     }
 }
-
