@@ -1,79 +1,163 @@
-﻿body {
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     font-family: Arial, sans-serif;
     background: #f2f5f9;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.page-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+.left-panel {
+    width: 35%;
+    background: #5d6f86;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 5rem 3rem;
+}
+
+.logo-circle {
+    width: 380px;
+    height: 380px;
+    background: white;
+    border-radius: 208px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    margin-bottom: 4rem;
+    overflow: hidden;
+    background-image: url('/images/Default_Landlord.png');
+    background-size: 65%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+    .logo-circle svg,
+    .logo-circle img {
+        display: none;
+    }
+
+.logo-text {
+    display: none;
+}
+
+.slogan {
+    margin-top: 3rem;
+    text-align: left;
+    font-size: 2rem;
+    line-height: 3rem;
+    font-weight: 700;
+    color: white;
+    padding-left: 0;
+}
+
+.right-panel {
+    width: 65%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
 }
 
 .login-container {
     background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    width: 320px;
+    width: 550px;
+    padding: 4rem 3.5rem;
+    border-radius: 24px;
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.12);
+    margin: 0 auto;
 }
 
 h2 {
+    font-size: 2.8rem;
+    font-weight: 900;
     text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+    font-family: 'Archivo Black', Arial, sans-serif;
+    filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15));
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.8rem;
 }
 
 label {
-    display: block;
-    margin-bottom: 0.3rem;
+    font-size: 1.05rem;
     color: #555;
+    display: block;
+    margin-bottom: 0.5rem;
 }
 
 input {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: 1rem 1.2rem;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    font-size: 1rem;
+    box-shadow: 0px 3px 6px rgba(0,0,0,0.08);
+    transition: border-color 0.3s;
 }
 
-button {
-    width: 100%;
-    padding: 0.6rem;
-    background-color: #0078d4;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-    button:hover {
-        background-color: #005a9e;
+    input:focus {
+        outline: none;
+        border-color: #4db2ff;
     }
 
-.error {
-    color: red;
-    text-align: center;
-    margin-top: 1rem;
+button.login-btn {
+    width: 100%;
+    padding: 1.1rem;
+    border: none;
+    border-radius: 30px;
+    background: #4db2ff;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    font-weight: bold;
+    transition: background 0.3s;
 }
 
-.signup-link {
+    button.login-btn:hover {
+        background: #1a8bf0;
+    }
+
+.signup-section {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: 1.2rem;
 }
+
+    .signup-section p {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 0.8rem;
+    }
 
 .signup-btn {
-    background-color: #e0e0e0;
-    color: #333;
+    width: 100%;
+    padding: 1.1rem;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
+    border-radius: 30px;
+    background: #0068c9;
+    color: white;
     font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 0.7rem;
+    transition: background 0.3s;
 }
 
     .signup-btn:hover {
-        background-color: #ccc;
+        background: #004e98;
     }

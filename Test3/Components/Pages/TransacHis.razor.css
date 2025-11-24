@@ -1,7 +1,6 @@
 ﻿.screen-container {
     width: 390px;
     height: 1026px;
-    background-color: #64748B;
     margin: 0 auto;
     position: relative;
     overflow: hidden;
@@ -33,10 +32,10 @@ html, body {
     align-items: center;
     padding: 2.5rem 0;
     height: 100vh;
-    position: fixed;
+    position: relative;
     left: 0;
     top: 0;
-    width: 280px;
+    width: 100%;
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
     overflow-y: auto;
@@ -136,7 +135,7 @@ nav {
     }
 
 .main-content {
-    padding: 0.5rem 3rem 1rem 3rem;
+    padding: 0;
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -145,8 +144,8 @@ nav {
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
     overflow-y: auto;
-    margin-left: 280px;
-    width: calc(100% - 280px);
+    margin-left: 0;
+    width: 100%;
 }
 
 .header {
@@ -180,236 +179,59 @@ nav {
         margin-left: 0.3rem;
     }
 
-.add-btn {
-    background: white;
-    color: #64748B;
-    border: none;
-    width: 221px;
-    height: 54px;
-    padding: 0;
-    border-radius: 15px;
-    cursor: pointer;
-    font-weight: bold;
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 16px;
-    transition: background 0.2s;
-}
-
-.edit-btn {
-    background: #64748B;
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 12px;
-}
-
-.add-btn:hover {
-    background: #e0e0e0;
-}
-
-.unit-card {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 1rem 1.2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #e9ecef;
-    height: 80px;
-    transition: background 0.2s;
-    font-family: 'Archivo Black', sans-serif;
-}
-
-.units-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 330px);
-    gap: 200px;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.unit-card {
-    background: #f0f0f0;
-    border-radius: 10px;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #e9ecef;
-    width: 350px;
-    height: 240px;
+.table-container {
+    width: 100%;
+    background-color: white;
+    padding: 2rem 3rem;
     box-sizing: border-box;
-    transition: background 0.2s;
-    font-family: 'Archivo Black', sans-serif;
-}
-
-    .unit-card:nth-child(1),
-    .unit-card:nth-child(2),
-    .unit-card:nth-child(3) {
-        margin-top: 50px;
-    }
-
-    .unit-card:nth-child(4),
-    .unit-card:nth-child(5),
-    .unit-card:nth-child(6) {
-        margin-top: -50px;
-    }
-
-    .unit-card:hover {
-        background: #e9ecef;
-    }
-
-.unit-info {
-    text-align: center;
-    width: 100%;
-}
-
-    .unit-info h4 {
-        margin: 0;
-        font-size: 1rem;
-        font-family: 'Archivo Black', sans-serif;
-    }
-
-    .unit-info p {
-        margin: 0.4rem 0 0 0;
-        font-size: 0.9rem;
-        color: #333;
-        font-family: 'Archivo Black', sans-serif;
-    }
-
-.edit-btn {
-    background: white;
-    color: #64748B;
-    border: none;
-    width: 220px;
-    height: 54px;
-    padding: 0;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-    .edit-btn:hover {
-        background: #e0e0e0;
-    }
-
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Archivo Black', sans-serif;
-    color: #333;
-}
-
-p, span, div {
-    font-family: 'Archivo Black', sans-serif;
-}
-
-.unit-image {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.apartment-image, .image-placeholder {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.image-placeholder {
-    background-color: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed #dee2e6;
-    color: #6c757d;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.apartment-image {
-    border: 1px solid #e9ecef;
-}
-
-.card-actions {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    justify-content: center;
-}
-
-.delete-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 12px;
-}
-
-    .delete-btn:hover {
-        background: #c82333;
-    }
-
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #64748B;
-}
-
-.error-message {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #dc3545;
-    background: #f8d7da;
-    border-radius: 8px;
-    margin: 1rem 0;
-}
-
-.no-apartments {
-    text-align: center;
-    padding: 3rem;
-    color: #6c757d;
-    font-size: 1.1rem;
-    grid-column: 1 / -1;
-}
-
-.dashboard-layout {
-    display: flex;
-    min-height: 100vh;
 }
 
 .table {
     width: 100%;
     border-collapse: collapse;
-    background: #f8f9fa;
-    min-height: 910px;
+    background: white;
 }
 
     .table th {
-        padding: 18px;
-        background: #6c7a89;
+        padding: 12px 18px;
+        background: #64748B;
         color: white;
-        text-align: left;
+        text-align: center;
+        font-family: Arial, sans-serif;
+        font-weight: normal;
+        border: 1px solid #4a5568;
+        transition: background-color 0.2s ease;
     }
 
+        .table th:hover {
+            background: #546576;
+        }
+
     .table td {
-        padding: 16px 12px;
-        border-bottom: 1px solid #ccc;
+        padding: 12px 18px;
+        border: 1px solid #ddd;
+        text-align: left;
+        font-family: Arial, sans-serif;
+        font-weight: normal;
+        background-color: white;
+        transition: background-color 0.2s ease;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+        .table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+            .table tbody tr:hover td {
+                background-color: #f5f5f5;
+                cursor: pointer;
+            }
+
+    .table td[colspan] {
         text-align: center;
+        color: #64748B;
+        font-style: italic;
     }

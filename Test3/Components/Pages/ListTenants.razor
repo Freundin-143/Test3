@@ -1,9 +1,15 @@
 ﻿@page "/ListTenants"
+@using Test3.Data.Models
+@using Test3.Data.Services
+@inject LeaseService LeaseService
+@inject ApartmentService ApartmentService
+@inject RoomService RoomService
+@inject UserService UserService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <div class="dashboard-layout">
-    <!-- Sidebar -->
+    <!-- Sidebar (keep your existing sidebar) -->
     <aside class="sidebar">
         <div class="logo">
             <img src="images/Default_Landlord.png" alt="Logo">
@@ -15,7 +21,6 @@
             <button class="nav-btn list-tenants" @onclick="ListofTenants">List of Tenants</button>
             <button class="nav-btn transaction-history" @onclick="TransacHistory">Transaction History</button>
         </nav>
-
 
         <div class="bottom-section">
             <button class="account-btn">
@@ -29,93 +34,223 @@
         </div>
     </aside>
 
-
     <!-- Main Content -->
     <div class="main-content">
-        <button class="btn btn-primary mb-3" @onclick="ShowAddModal">+ Add Tenant</button>
+        <div class="header-section">
+            <h2>Tenant Management</h2>
+            <button class="btn btn-primary" @onclick="ShowAddModal" disabled="@isLoading">
+                + Add Tenant
+            </button>
+        </div>
 
-        <div class="table-container">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Full Name</th>
-                        <th>Unit#</th>
-                        <th>Age</th>
-                        <th>Contact #</th>
-                        <th>Move‑in Date</th>
-                        <th>Lease Duration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Tenants.Count == 0)
-                    {
+        @if (isLoading && !ShowModal)
+        {
+            <div class="loading">Loading tenants...</div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-message">@errorMessage</div>
+        }
+        else
+        {
+            <div class="table-container">
+                <table class="table table-striped">
+                    <thead>
                         <tr>
-                            <td colspan="7" class="text-center">No tenants found.</td>
+                            <th>No.</th>
+                            <th>Full Name</th>
+                            <th>Unit#</th>
+                            <th>Contact #</th>
+                            <th>Email</th>
+                            <th>Move‑in Date</th>
+                            <th>Lease Duration</th>
+                            <th>Monthly Rent</th>
+                            <th>Security Deposit</th>
                         </tr>
-                    }
-                    else
-                    {
-                        @foreach (var tenant in Tenants.Select((value, index) => new { value, index }))
+                    </thead>
+                    <tbody>
+                        @if (!leases.Any())
                         {
                             <tr>
-                                <td>@(tenant.index + 1)</td>
-                                <td>@tenant.value.FullName</td>
-                                <td>@tenant.value.UnitNumber</td>
-                                <td>@tenant.value.Age</td>
-                                <td>@tenant.value.Contact</td>
-                                <td>@tenant.value.MoveInDate.ToShortDateString()</td>
-                                <td>@tenant.value.LeaseDuration</td>
+                                <td colspan="9" class="text-center no-data">No tenants found.</td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
-        </div>
+                        else
+                        {
+                            @foreach (var lease in leases.Select((value, index) => new { value, index }))
+                            {
+                                <tr>
+                                    <td>@(lease.index + 1)</td>
+                                    <td>@lease.value.FullName</td>
+                                    <td>@lease.value.UnitNumber</td>
+                                    <td>@lease.value.Contact</td>
+                                    <td>@lease.value.Email</td>
+                                    <td>@lease.value.MoveInDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@lease.value.LeaseDuration</td>
+                                    <td>₱@lease.value.RentAmount.ToString("N2")</td>
+                                    <td>₱@lease.value.SecurityDeposit.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
+    <!-- Add Tenant Modal -->
     @if (ShowModal)
     {
         <div class="modal-overlay">
             <div class="modal-box">
-                <h3>Add Tenant</h3>
-
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input class="form-control" @bind="NewTenant.FullName" />
+                <div class="modal-header">
+                    <h3>Add New Tenant</h3>
+                    <button class="close-btn" @onclick="CloseModal">×</button>
                 </div>
 
-                <div class="form-group">
-                    <label>Unit #</label>
-                    <input class="form-control" type="number" @bind="NewTenant.UnitNumber" />
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label class="required">Full Name</label>
+                            @if (!registeredUsers.Any())
+                            {
+                                <div class="no-users-warning">
+                                    No registered users found. Users need to sign up in the tenant portal first.
+                                </div>
+                            }
+                            else
+                            {
+                                <select class="form-control" @bind="selectedUserId" @bind:after="OnUserSelected">
+                                    <option value="">Select Tenant</option>
+                                    @foreach (var user in registeredUsers)
+                                    {
+                                        <option value="@user.Id">@FormatUserName(user)</option>
+                                    }
+                                </select>
+                            }
+                            @if (validationErrors.ContainsKey("FullName"))
+                            {
+                                <div class="validation-error">@validationErrors["FullName"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Unit Number</label>
+                            @if (!availableUnits.Any())
+                            {
+                                <div class="no-units-warning">
+                                    No available units found. Please add units in Manage Apartments first.
+                                </div>
+                            }
+                            else
+                            {
+                                <select class="form-control" @bind="newLease.UnitNumber">
+                                    <option value="">Select Unit</option>
+                                    @foreach (var unit in availableUnits)
+                                    {
+                                        <option value="@unit.UnitNumber">@unit.UnitNumber</option>
+                                    }
+                                </select>
+                            }
+                            @if (validationErrors.ContainsKey("UnitNumber"))
+                            {
+                                <div class="validation-error">@validationErrors["UnitNumber"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Contact Number</label>
+                            <input class="form-control" @bind="newLease.Contact" 
+                                   placeholder="e.g., +63 912 345 6789" 
+                                   disabled="@isUserSelected" />
+                            @if (validationErrors.ContainsKey("Contact"))
+                            {
+                                <div class="validation-error">@validationErrors["Contact"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input class="form-control" @bind="newLease.Email" 
+                                   placeholder="Enter email address" type="email" 
+                                   disabled="@isUserSelected" />
+                            @if (validationErrors.ContainsKey("Email"))
+                            {
+                                <div class="validation-error">@validationErrors["Email"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Move-in Date</label>
+                            <input class="form-control" type="date" @bind="newLease.MoveInDate" 
+                                   max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            @if (validationErrors.ContainsKey("MoveInDate"))
+                            {
+                                <div class="validation-error">@validationErrors["MoveInDate"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Lease Duration</label>
+                            <select class="form-control" @bind="newLease.LeaseDuration">
+                                <option value="">Select Duration</option>
+                                <option value="6 months">6 months</option>
+                                <option value="1 year">1 year</option>
+                                <option value="2 years">2 years</option>
+                                <option value="Month-to-month">Month-to-month</option>
+                            </select>
+                            @if (validationErrors.ContainsKey("LeaseDuration"))
+                            {
+                                <div class="validation-error">@validationErrors["LeaseDuration"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Monthly Rent (₱)</label>
+                            <input class="form-control" type="number" @bind="newLease.RentAmount" 
+                                   step="0.01" placeholder="0.00" />
+                            @if (validationErrors.ContainsKey("RentAmount"))
+                            {
+                                <div class="validation-error">@validationErrors["RentAmount"]</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label class="required">Security Deposit (₱)</label>
+                            <input class="form-control" type="number" @bind="newLease.SecurityDeposit" 
+                                   step="0.01" placeholder="0.00" />
+                            @if (validationErrors.ContainsKey("SecurityDeposit"))
+                            {
+                                <div class="validation-error">@validationErrors["SecurityDeposit"]</div>
+                            }
+                        </div>
+                    </form>
+
+                    @if (!string.IsNullOrEmpty(saveMessage))
+                    {
+                        <div class="save-message @(isSaveError ? "error" : "success")">
+                            @saveMessage
+                        </div>
+                    }
                 </div>
 
-                <div class="form-group">
-                    <label>Age</label>
-                    <input class="form-control" type="number" @bind="NewTenant.Age" />
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseModal" disabled="@isSaving">
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" @onclick="SaveLease" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <span>Save Tenant</span>
+                        }
+                    </button>
                 </div>
-
-                <div class="form-group">
-                    <label>Contact #</label>
-                    <input class="form-control" @bind="NewTenant.Contact" />
-                </div>
-
-                <div class="form-group">
-                    <label>Move‑in Date</label>
-                    <input class="form-control" type="date" @bind="NewTenant.MoveInDate" />
-                </div>
-
-                <div class="form-group">
-                    <label>Lease Duration</label>
-                    <input class="form-control" @bind="NewTenant.LeaseDuration" />
-                </div>
-
-                <button class="btn btn-success" @onclick="AddTenant">Save</button>
-                <button class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
             </div>
         </div>
-    }
-
     }
 </div>
 
@@ -124,40 +259,267 @@
     [SupplyParameterFromQuery(Name = "landlordId")]
     public string? LandlordId { get; set; }
 
-
-    public class TenantModel
-    {
-        public string FullName { get; set; }
-        public int UnitNumber { get; set; }
-        public int Age { get; set; }
-        public string Contact { get; set; }
-        public DateTime MoveInDate { get; set; } = DateTime.Now;
-        public string LeaseDuration { get; set; }
-    }
-
-    private List<TenantModel> Tenants = new();
-    private TenantModel NewTenant = new();
+    private List<Lease> leases = new();
+    private List<Room> availableUnits = new();
+    private List<User> registeredUsers = new();
+    private Lease newLease = new();
+    private string selectedUserId = "";
+    private bool isUserSelected = false;
     private bool ShowModal = false;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string errorMessage = "";
+    private string saveMessage = "";
+    private bool isSaveError = false;
+    private Dictionary<string, string> validationErrors = new();
 
-    void ShowAddModal()
+    protected override async Task OnInitializedAsync()
     {
-        NewTenant = new TenantModel();
+        if (string.IsNullOrEmpty(LandlordId))
+        {
+            errorMessage = "Landlord ID not found. Please login again.";
+            isLoading = false;
+            return;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = "";
+        
+        try
+        {
+            // Load existing leases
+            leases = await LeaseService.GetLeasesByLandlordAsync(LandlordId);
+            
+            // Load available units (rooms that are not occupied)
+            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
+            availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
+            
+            // Load registered users from UserService
+            registeredUsers = await UserService.GetAllUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading data. Please try again.";
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string FormatUserName(User user)
+    {
+        // Format: First Name, Middle Name, Last Name
+        var parts = new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(user.FirstName))
+            parts.Add(user.FirstName);
+            
+        if (!string.IsNullOrWhiteSpace(user.MiddleName))
+            parts.Add(user.MiddleName);
+            
+        if (!string.IsNullOrWhiteSpace(user.LastName))
+            parts.Add(user.LastName);
+
+        return string.Join(", ", parts);
+    }
+
+    private void OnUserSelected()
+{
+    if (!string.IsNullOrEmpty(selectedUserId))
+    {
+        var selectedUser = registeredUsers.FirstOrDefault(u => u.Id == selectedUserId);
+
+        if (selectedUser != null)
+        {
+            newLease.FullName = FormatUserName(selectedUser);
+            newLease.Contact = selectedUser.ContactNumber ?? "";
+            newLease.Email = selectedUser.Email ?? "";
+            isUserSelected = true;
+        }
+    }
+    else
+    {
+        isUserSelected = false;
+    }
+}
+
+
+    private async void ShowAddModal()
+    {
+        if (string.IsNullOrEmpty(LandlordId))
+        {
+            errorMessage = "Please login again.";
+            return;
+        }
+
+        newLease = new Lease { LandlordId = LandlordId, MoveInDate = DateTime.Today };
+        selectedUserId = "";
+        isUserSelected = false;
+        validationErrors.Clear();
+        saveMessage = "";
+        isSaveError = false;
+        
+        // Refresh available units and users
+        await LoadAvailableUnits();
+        await LoadRegisteredUsers();
+        
         ShowModal = true;
+        StateHasChanged();
     }
 
-    void CloseModal() => ShowModal = false;
-
-    void AddTenant()
+    private async Task LoadAvailableUnits()
     {
-        Tenants.Add(NewTenant);
-        ShowModal = false;
+        try
+        {
+            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
+            availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading available units: {ex.Message}");
+        }
     }
 
-    //------Navigation----------------------
+    private async Task LoadRegisteredUsers()
+    {
+        try
+        {
+            registeredUsers = await UserService.GetAllUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading registered users: {ex.Message}");
+            registeredUsers = new List<User>();
+        }
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        validationErrors.Clear();
+        saveMessage = "";
+        isSaveError = false;
+        selectedUserId = "";
+        isUserSelected = false;
+        StateHasChanged();
+    }
+
+    private bool ValidateForm()
+    {
+        validationErrors.Clear();
+
+        if (string.IsNullOrWhiteSpace(newLease.FullName))
+            validationErrors["FullName"] = "Please select a tenant from the list.";
+
+        if (string.IsNullOrWhiteSpace(newLease.UnitNumber))
+            validationErrors["UnitNumber"] = "Unit number is required.";
+
+        if (string.IsNullOrWhiteSpace(newLease.Contact))
+            validationErrors["Contact"] = "Contact number is required.";
+        else if (newLease.Contact.Length < 10)
+            validationErrors["Contact"] = "Contact number appears to be invalid.";
+
+        if (string.IsNullOrWhiteSpace(newLease.LeaseDuration))
+            validationErrors["LeaseDuration"] = "Lease duration is required.";
+
+        if (newLease.RentAmount <= 0)
+            validationErrors["RentAmount"] = "Monthly rent must be greater than 0.";
+
+        if (newLease.SecurityDeposit < 0)
+            validationErrors["SecurityDeposit"] = "Security deposit cannot be negative.";
+
+        if (newLease.MoveInDate > DateTime.Today)
+            validationErrors["MoveInDate"] = "Move-in date cannot be in the future.";
+
+        return !validationErrors.Any();
+    }
+
+    private async Task SaveLease()
+    {
+        if (!ValidateForm())
+        {
+            StateHasChanged();
+            return;
+        }
+
+        isSaving = true;
+        saveMessage = "";
+        isSaveError = false;
+        StateHasChanged();
+
+        try
+        {
+            // Check if unit is already occupied
+            var isOccupied = await LeaseService.IsUnitOccupiedAsync(LandlordId, newLease.UnitNumber);
+            if (isOccupied)
+            {
+                saveMessage = $"Unit {newLease.UnitNumber} is already occupied. Please select a different unit.";
+                isSaveError = true;
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Check if user is already assigned to another unit
+            var existingUserLease = leases.FirstOrDefault(l => l.FullName == newLease.FullName && l.IsActive);
+            if (existingUserLease != null)
+            {
+                saveMessage = $"{newLease.FullName} is already assigned to unit {existingUserLease.UnitNumber}.";
+                isSaveError = true;
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Save to database
+            await LeaseService.CreateLeaseAsync(newLease);
+            
+            // Update room status to Occupied
+            var rooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            var roomToUpdate = rooms.FirstOrDefault(r => r.UnitNumber == newLease.UnitNumber);
+            if (roomToUpdate != null)
+            {
+                roomToUpdate.Status = "Occupied";
+                await RoomService.UpdateRoomAsync(roomToUpdate.Id, roomToUpdate);
+            }
+
+            saveMessage = "Tenant added successfully!";
+            isSaveError = false;
+
+            // Refresh data and close modal
+            await LoadData();
+            await Task.Delay(1500);
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            saveMessage = "Error saving tenant. Please try again.";
+            isSaveError = true;
+            Console.WriteLine($"Error saving lease: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    // Navigation methods
     private void Logout()
     {
         Navigation.NavigateTo("/Landlord", true);
     }
+
     private void ManageApartment()
     {
         Navigation.NavigateTo($"/ManageApartment?landlordId={LandlordId}", true);
@@ -173,5 +535,3 @@
         Navigation.NavigateTo($"/TransacHis?landlordId={LandlordId}", true);
     }
 }
-
-

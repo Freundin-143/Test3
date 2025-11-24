@@ -3,63 +3,62 @@
 @inject LandlordService LandlordService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
-
-<div class="login-container">
-    <h2>Login</h2>
-
-    <div class="form-group">
-        <label>Username</label>
-        <input @bind="username" placeholder="Enter username" />
-    </div>
-
-    <div class="form-group">
-        <label>Password</label>
-        <input type="password" @bind="password" placeholder="Enter password" />
-    </div>
-
-    <button @onclick="LoginUser">Login</button>
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <p class="error">@errorMessage</p>
-    }
+<div class="page-wrapper">
+	<div class="left-panel">
+		<div class="logo-circle">
+			<span style="font-size: 24px; color: #333;"></span>
+		</div>
+		<div class="slogan">
+			Built for Landlords,<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Loved by Tenants
+		</div>
+	</div>
+	<div class="right-panel">
+		<div class="login-container">
+			<h2>Login</h2>
+			<div class="form-group">
+				<label>Username</label>
+				<input @bind="username" placeholder="Enter username" />
+			</div>
+			<div class="form-group">
+				<label>Password</label>
+				<input type="password" @bind="password" placeholder="Enter password" />
+			</div>
+			<button class="login-btn" @onclick="LoginUser">Login</button>
+			@if (!string.IsNullOrEmpty(errorMessage))
+			{
+				<p class="error">@errorMessage</p>
+			}
+		</div>
+	</div>
 </div>
-
 @code {
-    private string username = "";
-    private string password = "";
-    private string errorMessage = "";
-
-    private async Task LoginUser()
-    {
-        // First check for hardcoded admin credentials
-        if (username == "admin" && password == "1234")
-        {
-            // For admin, you might want to handle differently
-            // For now, we'll navigate without an ID or use a default
-            Navigation.NavigateTo("/ManageApartment");
-            return;
-        }
-
-        // Then check against database landlords
-        try
-        {
-            var landlord = await LandlordService.LoginAsync(username, password);
-
-            if (landlord != null)
-            {
-                // Successful login - pass landlord ID to ManageApartment
-                Navigation.NavigateTo($"/ManageApartment?landlordId={landlord.Id}");
-            }
-            else
-            {
-                errorMessage = "Invalid username or password.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "Login failed. Please try again.";
-            Console.WriteLine($"Landlord login error: {ex.Message}");
-        }
-    }
+	private string username = "";
+	private string password = "";
+	private string errorMessage = "";
+	private async Task LoginUser()
+	{
+		if (username == "admin" && password == "1234")
+		{
+			Navigation.NavigateTo("/ManageApartment");
+			return;
+		}
+		try
+		{
+			var landlord = await LandlordService.LoginAsync(username, password);
+			if (landlord != null)
+			{
+				Navigation.NavigateTo($"/ManageApartment?landlordId={landlord.Id}");
+			}
+			else
+			{
+				errorMessage = "Invalid username or password.";
+			}
+		}
+		catch (Exception ex)
+		{
+			errorMessage = "Login failed. Please try again.";
+			Console.WriteLine($"Landlord login error: {ex.Message}");
+		}
+	}
 }
