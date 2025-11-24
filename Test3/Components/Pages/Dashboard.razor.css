@@ -1,4 +1,4 @@
-﻿body {
+body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8f8f8;
@@ -95,6 +95,21 @@
     align-items: center;
     gap: 20px
 }
+.bill_btn {
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    background-color: #bfbfbf;
+    padding: 8px 20px;
+    font-size: 15px;
+    color: #000;
+    cursor: pointer;
+}
+
+    .bill_btn:hover {
+        background-color: #b0b0b0;
+    }
+
 
 .bill_btn {
     border: none;

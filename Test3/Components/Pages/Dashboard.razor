@@ -1,4 +1,4 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @using Test3.Data.Models
 @using Test3.Data.Services
 @inject ApartmentService ApartmentService
@@ -20,7 +20,7 @@
                 <input type="text"
                        placeholder="Search by apartment name or location"
                        @bind="searchTerm"
-                       @bind:event="oninput" />
+                       @bind:event="oninput" />  
                 <button><i class="fa fa-search"></i></button>
             </div>
         </div>
