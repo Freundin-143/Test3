@@ -2,8 +2,8 @@
 @using Test3.Data.Models
 @using Test3.Data.Services
 @inject ApartmentService ApartmentService
-@inject NavigationManager Navigation
 @inject UserService UserService
+@inject NavigationManager Navigation
 @rendermode InteractiveServer
 
 <div class="dashboard-container">
@@ -21,31 +21,13 @@
                 <input type="text"
                        placeholder="Search by apartment name or location"
                        @bind="searchTerm"
-                       @bind:event="oninput" 
-                       @onkeypress="OnKeyPress" />
+                       @bind:event="oninput" />
                 <button><i class="fa fa-search"></i></button>
             </div>
         </div>
         <div class="right-section">
             <button class="bill_btn" @onclick="ViewBill">View Bill</button>
-
-            <div class="account-dropdown">
-                <button class="account-btn" @onclick="ToggleDropdown">
-                    <i class="fa fa-user-circle"></i>
-                    <span>Account</span>
-                    <i class="fa fa-chevron-down"></i>
-                </button>
-
-                @if (showDropdown)
-                {
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" @onclick="ShowLogoutConfirmation">
-                            <i class="fa fa-sign-out"></i>
-                            Logout
-                        </button>
-                    </div>
-                }
-            </div>
+            <button class="account_btn" @onclick="() => ShowAccountModal = true">Account</button>
         </div>
     </header>
 
@@ -94,48 +76,41 @@
     </main>
 </div>
 
-<!-- Logout Confirmation Modal -->
-@if (showLogoutModal)
-{
-    <div class="modal-overlay" @onclick="CloseModals">
-        <div class="modal-content confirmation-modal" @onclick:stopPropagation="true">
-            <div class="confirmation-header">
-                <h3>Confirm Logout</h3>
-            </div>
-            <div class="confirmation-body">
-                <p>Are you sure you want to log out?</p>
-            </div>
-            <div class="confirmation-actions">
-                <button class="cancel-btn" @onclick="CloseLogoutModal">Cancel</button>
-                <button class="confirm-btn" @onclick="LogoutUser">Confirm</button>
-            </div>
-        </div>
-    </div>
-}
+<ViewAccount IsVisible="ShowAccountModal"
+             IsVisibleChanged="@(value => ShowAccountModal = value)"
+             CurrentUser="currentUser">
+</ViewAccount>
 
 @code {
+    private bool ShowAccountModal = false;
+
     private List<Apartment> apartments = new();
     private string searchTerm = string.Empty;
     private bool isLoading = true;
     private Timer? searchTimer;
+    private User? currentUser;
 
     [Parameter]
     public string UserId { get; set; } = string.Empty;
 
-    // Dropdown state
-    private bool showDropdown = false;
-    private bool showLogoutModal = false;
-    private User? currentUser;
-
     protected override async Task OnInitializedAsync()
     {
         await LoadApartments();
+        await LoadCurrentUser();
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        if (!string.IsNullOrEmpty(UserId))
+        {
+            currentUser = await UserService.GetUserByIdAsync(UserId);
+        }
     }
 
     private async Task LoadApartments()
     {
         isLoading = true;
-        StateHasChanged(); // Force UI update to show loading
+        StateHasChanged();
 
         if (string.IsNullOrEmpty(searchTerm))
         {
@@ -147,68 +122,18 @@
         }
 
         isLoading = false;
-        StateHasChanged(); // Force UI update to show results
+        StateHasChanged();
     }
 
     private async void OnSearchChanged(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? string.Empty;
 
-        // Simple debounce - wait 300ms after user stops typing
         searchTimer?.Dispose();
         searchTimer = new Timer(async _ =>
         {
             await InvokeAsync(LoadApartments);
         }, null, 300, Timeout.Infinite);
-    }
-
-    private async Task SearchApartments()
-    {
-        await LoadApartments();
-    }
-
-    private async Task OnKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            await SearchApartments();
-        }
-    }
-
-    // Dropdown methods
-    private void ToggleDropdown()
-    {
-        showDropdown = !showDropdown;
-    }
-
-    private void CloseDropdown()
-    {
-        showDropdown = false;
-    }
-
-    private void ShowLogoutConfirmation()
-    {
-        CloseDropdown();
-        showLogoutModal = true;
-        StateHasChanged();
-    }
-
-    private void CloseLogoutModal()
-    {
-        showLogoutModal = false;
-        StateHasChanged();
-    }
-
-    private void CloseModals()
-    {
-        showLogoutModal = false;
-        StateHasChanged();
-    }
-
-    private void LogoutUser()
-    {
-        CloseLogoutModal();
-        Navigation.NavigateTo("/");
     }
 
     void ViewBill()
