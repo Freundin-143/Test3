@@ -98,8 +98,71 @@
                         }
                     </div>
 
-                    <!-- Your existing image upload section -->
-                    <!-- ... -->
+                    <!-- Multiple Image Upload -->
+                    <div class="form-group full-width">
+                        <label>Unit Images:</label>
+                        <div class="multiple-image-upload">
+                            <!-- Existing Images -->
+                            @if (CurrentRoom.Images.Any())
+                            {
+                                <div class="existing-images-grid">
+                                    <h4>Existing Images</h4>
+                                    <div class="images-grid">
+                                        @for (int i = 0; i < CurrentRoom.Images.Count; i++)
+                                        {
+                                            var index = i; // Capture the index in a local variable
+                                            var image = CurrentRoom.Images[i];
+                                            <div class="image-item">
+                                                <img src="data:@image.ImageContentType;base64,@Convert.ToBase64String(image.ImageData)"
+                                                     alt="Unit image"
+                                                     class="preview-image-multiple" />
+                                                <button type="button" class="remove-existing-image-btn"
+                                                        @onclick="() => RemoveExistingImage(index)">
+                                                    ×
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- New Image Upload -->
+                            <div class="new-images-section">
+                                <h4>Add New Images</h4>
+                                <div class="file-upload-area-multiple">
+                                    <InputFile accept=".png,.jpg,.jpeg"
+                                               OnChange="HandleMultipleFilesSelected"
+                                               class="file-input-multiple"
+                                               id="multipleFileInput"
+                                               multiple />
+                                    <label for="multipleFileInput" class="file-input-label-multiple">
+                                        <span>+ Choose Images (Multiple PNG, JPG, JPEG)</span>
+                                    </label>
+                                </div>
+
+                                <!-- New Images Preview -->
+                                @if (selectedFiles.Any())
+                                {
+                                    <div class="new-images-grid">
+                                        <div class="images-grid">
+                                            @foreach (var file in selectedFiles)
+                                            {
+                                                <div class="image-item">
+                                                    <img src="@GetImagePreviewUrl(file)"
+                                                         alt="New image"
+                                                         class="preview-image-multiple" />
+                                                    <button type="button" class="remove-new-image-btn"
+                                                            @onclick="() => RemoveNewImage(file)">
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(saveMessage))
@@ -161,14 +224,18 @@
     private bool isError = false;
     private bool IsEditing => Room?.Id != null;
 
+    // Multiple image handling
+    private List<IBrowserFile> selectedFiles = new();
+    private Dictionary<IBrowserFile, string> imagePreviews = new();
+
     // Bill management
     private bool showBillModal = false;
     private decimal CurrentElectricityBill = 0;
     private decimal CurrentWaterBill = 0;
 
-    protected override async void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        if (IsVisible && Room != null)
+        if (IsVisible)
         {
             await LoadRoomData();
         }
@@ -176,8 +243,12 @@
 
     private async Task LoadRoomData()
     {
+        // Add a small delay to ensure parameter is set
+        await Task.Delay(1);
+
         if (Room != null)
         {
+            // Editing existing room - create a COMPLETE deep copy to avoid reference issues
             CurrentRoom = new Room
             {
                 Id = Room.Id,
@@ -189,17 +260,23 @@
                 Aircon = Room.Aircon,
                 Status = Room.Status,
                 Description = Room.Description,
-                Images = Room.Images?.ToList() ?? new List<RoomImage>()
+                CreatedAt = Room.CreatedAt,
+                // Create completely new image objects to break any references
+                Images = Room.Images?.Select(img => new RoomImage
+                {
+                    ImageData = (byte[])img.ImageData.Clone(),
+                    ImageContentType = img.ImageContentType,
+                    ImageFileName = img.ImageFileName,
+                    UploadedAt = img.UploadedAt
+                }).ToList() ?? new List<RoomImage>()
             };
 
             // Load current bills
-            if (IsEditing)
-            {
-                await LoadCurrentBills();
-            }
+            await LoadCurrentBills();
         }
         else
         {
+            // Creating new room - initialize with defaults
             CurrentRoom = new Room
             {
                 ApartmentId = ApartmentId,
@@ -214,7 +291,12 @@
             };
         }
 
-        // Reset other fields...
+        selectedFiles.Clear();
+        imagePreviews.Clear();
+        saveMessage = "";
+        isError = false;
+
+        StateHasChanged();
     }
 
     private async Task LoadCurrentBills()
@@ -263,9 +345,41 @@
 
         try
         {
-            // Save room data
+            // Process new image uploads
+            var newImages = new List<RoomImage>();
+            foreach (var file in selectedFiles)
+            {
+                try
+                {
+                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(file);
+                    newImages.Add(new RoomImage
+                    {
+                        ImageData = imageData,
+                        ImageContentType = contentType,
+                        ImageFileName = fileName,
+                        UploadedAt = DateTime.UtcNow
+                    });
+                }
+                catch (Exception ex)
+                {
+                    saveMessage = $"Error processing {file.Name}: {ex.Message}";
+                    isError = true;
+                    isSaving = false;
+                    StateHasChanged();
+                    return;
+                }
+            }
+
+            // Combine existing images (which may have been modified by removals) and new images
+            var allImages = CurrentRoom.Images.Concat(newImages).ToList();
+            CurrentRoom.Images = allImages;
+
+            Room savedRoom;
+
             if (IsEditing)
             {
+                // Update existing room
+                CurrentRoom.ApartmentId = ApartmentId; // Ensure ApartmentId is set
                 await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
 
                 // Save utility bills
@@ -287,11 +401,15 @@
                     await UtilityBillService.CreateOrUpdateBillAsync(utilityBill);
                 }
 
+                savedRoom = CurrentRoom;
                 saveMessage = "Unit updated successfully!";
             }
             else
             {
+                // Create new room in database
                 var newRoom = await RoomService.CreateRoomAsync(ApartmentId);
+
+                // Update the new room with the entered data
                 newRoom.UnitNumber = CurrentRoom.UnitNumber;
                 newRoom.RoomType = CurrentRoom.RoomType;
                 newRoom.RoomPrice = CurrentRoom.RoomPrice;
@@ -302,12 +420,36 @@
                 newRoom.Images = CurrentRoom.Images;
 
                 await RoomService.UpdateRoomAsync(newRoom.Id, newRoom);
-                CurrentRoom = newRoom;
+
+                // Save utility bills for new room (if provided)
+                if (CurrentElectricityBill > 0 || CurrentWaterBill > 0)
+                {
+                    var currentDate = DateTime.UtcNow;
+                    var utilityBill = new UtilityBill
+                    {
+                        RoomId = newRoom.Id,
+                        UnitNumber = newRoom.UnitNumber,
+                        LandlordId = LandlordId,
+                        ElectricityBill = CurrentElectricityBill,
+                        WaterBill = CurrentWaterBill,
+                        Month = currentDate.Month,
+                        Year = currentDate.Year,
+                        DueDate = new DateTime(currentDate.Year, currentDate.Month, 1).AddMonths(1)
+                    };
+
+                    await UtilityBillService.CreateOrUpdateBillAsync(utilityBill);
+                }
+
+                savedRoom = newRoom;
                 saveMessage = "Unit created successfully!";
             }
 
             isError = false;
-            await OnUnitSaved.InvokeAsync(CurrentRoom);
+
+            // Notify parent component
+            await OnUnitSaved.InvokeAsync(savedRoom);
+
+            // Close modal after delay
             await Task.Delay(1500);
             await CloseModal();
         }
@@ -322,6 +464,61 @@
             isSaving = false;
             StateHasChanged();
         }
+    }
+
+    private async Task HandleMultipleFilesSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (!selectedFiles.Any(f => f.Name == file.Name))
+            {
+                selectedFiles.Add(file);
+
+                // Create preview
+                var resizedImageFile = await file.RequestImageFileAsync("image/png", 200, 200);
+                var buffer = new byte[resizedImageFile.Size];
+                await resizedImageFile.OpenReadStream().ReadAsync(buffer);
+                var previewUrl = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
+                imagePreviews[file] = previewUrl;
+            }
+        }
+        StateHasChanged();
+    }
+
+    private string GetImagePreviewUrl(IBrowserFile file)
+    {
+        return imagePreviews.ContainsKey(file) ? imagePreviews[file] : "";
+    }
+
+    private void RemoveNewImage(IBrowserFile file)
+    {
+        selectedFiles.Remove(file);
+        imagePreviews.Remove(file);
+        StateHasChanged();
+    }
+
+    private async Task RemoveExistingImage(int index)
+    {
+        if (index >= 0 && index < CurrentRoom.Images.Count)
+        {
+            CurrentRoom.Images.RemoveAt(index);
+
+            // Optional: Show a temporary message
+            saveMessage = $"Image removed. Click 'Save Unit' to confirm changes.";
+            isError = false;
+
+            StateHasChanged();
+
+            // Clear the message after 3 seconds
+            await ClearMessageAfterDelay();
+        }
+    }
+
+    private async Task ClearMessageAfterDelay()
+    {
+        await Task.Delay(3000);
+        saveMessage = "";
+        StateHasChanged();
     }
 
     private async Task CloseModal()

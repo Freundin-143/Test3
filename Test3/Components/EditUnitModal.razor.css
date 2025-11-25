@@ -82,44 +82,27 @@
     gap: 18px 22px;
 }
 
-/* --- New: Status + Manage Bill layout --- */
-.status-with-button {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-    /* Let the status dropdown take the remaining width */
-    .status-with-button > div {
-        flex: 1;
-    }
-
-/* --- New: Manage Bill button --- */
-.btn-manage-bill {
-    padding: 10px 16px;
-    background: #0ea5e9; /* sky blue */
-    color: white;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    white-space: nowrap;
-    height: 41px; /* match input height */
-    transition: 0.2s ease;
-}
-
-    .btn-manage-bill:hover {
-        background: #0284c7;
-    }
-
-
 .full-width {
     grid-column: span 2;
 }
 
+/* Form Groups */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+    .form-group label {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #1e293b;
+        display: block;
+    }
+
 /* Inputs */
-.input {
+.text-input,
+.select-input {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
@@ -128,7 +111,8 @@
     transition: 0.2s;
 }
 
-    .input:focus {
+    .text-input:focus,
+    .select-input:focus {
         border-color: #3b82f6;
         box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
         outline: none;
@@ -136,33 +120,118 @@
 
 .textarea {
     resize: vertical;
-}
-
-/* Labels */
-.form-group label {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 6px;
-    color: #1e293b;
-    display: block;
+    min-height: 80px;
 }
 
 /* Checkbox */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 500;
+    cursor: pointer;
 }
 
-/* Image Sections */
-.image-section h4 {
-    margin-bottom: 6px;
-    font-size: 15px;
+    .checkbox-label input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+/* Bill Management Section */
+.bill-management-section {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+    .bill-management-section > label {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 12px;
+        color: #1e293b;
+        display: block;
+    }
+
+.bill-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.bill-input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+    .bill-input-group label {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: #475569;
+    }
+
+.btn-manage-bills {
+    padding: 10px 16px;
+    background: #0ea5e9;
+    color: white;
     font-weight: 600;
-    color: #334155;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s ease;
+    width: 100%;
 }
 
+    .btn-manage-bills:hover {
+        background: #0284c7;
+    }
+
+/* Multiple Image Upload */
+.multiple-image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Existing Images Section */
+.existing-images-grid {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+    .existing-images-grid h4 {
+        margin: 0 0 12px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+/* New Images Section */
+.new-images-section {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+    .new-images-section h4 {
+        margin: 0 0 12px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+/* Images Grid */
 .images-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -175,7 +244,7 @@
     height: 160px;
 }
 
-.preview-image {
+.preview-image-multiple {
     width: 100%;
     height: 100%;
     border-radius: 10px;
@@ -183,44 +252,66 @@
     border: 1px solid #d1d5db;
 }
 
-.remove-img-btn {
+.remove-existing-image-btn,
+.remove-new-image-btn {
     position: absolute;
     top: -6px;
     right: -6px;
     background: #ef4444;
     border: none;
     color: #fff;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Upload Box */
-.upload-box {
+    .remove-existing-image-btn:hover,
+    .remove-new-image-btn:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+    }
+
+/* File Upload Area */
+.file-upload-area-multiple {
+    position: relative;
+}
+
+.file-input-multiple {
+    display: none;
+}
+
+.file-input-label-multiple {
+    display: block;
     border: 2px dashed #94a3b8;
-    background: #f8fafc;
-    padding: 18px;
+    background: #ffffff;
+    padding: 24px;
     border-radius: 12px;
     text-align: center;
+    cursor: pointer;
     transition: 0.2s;
 }
 
-    .upload-box:hover {
-        background: #eef2f6;
+    .file-input-label-multiple:hover {
+        background: #f1f5f9;
         border-color: #64748b;
     }
 
-.upload-label {
-    cursor: pointer;
-    color: #475569;
-    font-size: 14px;
-    user-select: none;
-}
+    .file-input-label-multiple span {
+        color: #475569;
+        font-size: 14px;
+        font-weight: 500;
+    }
 
-input[type="file"] {
-    display: none;
+.new-images-grid {
+    margin-top: 12px;
 }
 
 /* Footer */
@@ -232,7 +323,7 @@ input[type="file"] {
     gap: 12px;
 }
 
-.btn {
+.btn-cancel {
     padding: 10px 22px;
     border-radius: 8px;
     font-size: 15px;
@@ -240,40 +331,65 @@ input[type="file"] {
     cursor: pointer;
     border: none;
     transition: 0.2s;
+    background: #e2e8f0;
+    color: #334155;
 }
 
-    .btn.cancel {
-        background: #e2e8f0;
-        color: #334155;
+    .btn-cancel:hover:not(:disabled) {
+        background: #cbd5e1;
     }
 
-        .btn.cancel:hover {
-            background: #cbd5e1;
-        }
-
-    .btn.save {
-        background: #2563eb;
-        color: white;
+    .btn-cancel:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
-        .btn.save:hover {
-            background: #1d4ed8;
-        }
+.btn-save {
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+    background: #2563eb;
+    color: white;
+}
 
-/* Save message */
-.save-alert {
-    margin-top: 12px;
-    padding: 12px;
+    .btn-save:hover:not(:disabled) {
+        background: #1d4ed8;
+    }
+
+    .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+/* Save Message */
+.save-message {
+    margin-top: 16px;
+    padding: 12px 16px;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
 }
 
-    .save-alert.success {
+    .save-message.success {
         background: #dcfce7;
         color: #166534;
+        border: 1px solid #bbf7d0;
     }
 
-    .save-alert.error {
+    .save-message.error {
         background: #fee2e2;
         color: #991b1b;
+        border: 1px solid #fecaca;
     }
+
+/* Loading State */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-size: 15px;
+}
