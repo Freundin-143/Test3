@@ -2,6 +2,7 @@
 @using Test3.Data.Services
 @using Microsoft.AspNetCore.Components.Forms
 @inject RoomService RoomService
+@inject UtilityBillService UtilityBillService
 @inject ImageService ImageService
 
 <div class="modal-overlay @(IsVisible ? "visible" : "")">
@@ -19,6 +20,7 @@
             else
             {
                 <div class="form-grid">
+                    <!-- Your existing form fields -->
                     <div class="form-group">
                         <label>Unit Number:</label>
                         <input @bind="CurrentRoom.UnitNumber" class="text-input" placeholder="e.g., Unit 101" />
@@ -73,71 +75,31 @@
                                   placeholder="Enter room description..." rows="3"></textarea>
                     </div>
 
-                    <!-- Multiple Image Upload -->
-                    <div class="form-group full-width">
-                        <label>Unit Images:</label>
-                        <div class="multiple-image-upload">
-                            <!-- Existing Images -->
-                            @if (CurrentRoom.Images.Any())
-                            {
-                                <div class="existing-images-grid">
-                                    <h4>Existing Images</h4>
-                                    <div class="images-grid">
-                                        @for (int i = 0; i < CurrentRoom.Images.Count; i++)
-                                        {
-                                            var index = i; // Capture the index in a local variable
-                                            var image = CurrentRoom.Images[i];
-                                            <div class="image-item">
-                                                <img src="data:@image.ImageContentType;base64,@Convert.ToBase64String(image.ImageData)"
-                                                     alt="Unit image"
-                                                     class="preview-image-multiple" />
-                                                <button type="button" class="remove-existing-image-btn"
-                                                        @onclick="() => RemoveExistingImage(index)">
-                                                    ×
-                                                </button>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- New Image Upload -->
-                            <div class="new-images-section">
-                                <h4>Add New Images</h4>
-                                <div class="file-upload-area-multiple">
-                                    <InputFile accept=".png,.jpg,.jpeg"
-                                               OnChange="HandleMultipleFilesSelected"
-                                               class="file-input-multiple"
-                                               id="multipleFileInput"
-                                               multiple />
-                                    <label for="multipleFileInput" class="file-input-label-multiple">
-                                        <span>+ Choose Images (Multiple PNG, JPG, JPEG)</span>
-                                    </label>
-                                </div>
-
-                                <!-- New Images Preview -->
-                                @if (selectedFiles.Any())
-                                {
-                                    <div class="new-images-grid">
-                                        <div class="images-grid">
-                                            @foreach (var file in selectedFiles)
-                                            {
-                                                <div class="image-item">
-                                                    <img src="@GetImagePreviewUrl(file)"
-                                                         alt="New image"
-                                                         class="preview-image-multiple" />
-                                                    <button type="button" class="remove-new-image-btn"
-                                                            @onclick="() => RemoveNewImage(file)">
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                }
+                    <!-- Bill Management Section -->
+                    <div class="form-group full-width bill-management-section">
+                        <label>Monthly Bills Management</label>
+                        <div class="bill-inputs">
+                            <div class="bill-input-group">
+                                <label>Electricity Bill (₱):</label>
+                                <input type="number" @bind="CurrentElectricityBill" class="text-input"
+                                       step="0.01" placeholder="0.00" />
+                            </div>
+                            <div class="bill-input-group">
+                                <label>Water Bill (₱):</label>
+                                <input type="number" @bind="CurrentWaterBill" class="text-input"
+                                       step="0.01" placeholder="0.00" />
                             </div>
                         </div>
+                        @if (IsEditing)
+                        {
+                            <button class="btn-manage-bills" @onclick="OpenBillManagement">
+                                Manage Bills History
+                            </button>
+                        }
                     </div>
+
+                    <!-- Your existing image upload section -->
+                    <!-- ... -->
                 </div>
 
                 @if (!string.IsNullOrEmpty(saveMessage))
@@ -163,6 +125,16 @@
     </div>
 </div>
 
+<!-- Bill Management Modal -->
+@if (showBillModal)
+{
+    <ManageBill IsVisible="showBillModal"
+                RoomId="@CurrentRoom.Id"
+                UnitNumber="@CurrentRoom.UnitNumber"
+                LandlordId="@LandlordId"
+                OnBillsSaved="HandleBillsSaved" />
+}
+
 @code {
     [Parameter]
     public bool IsVisible { get; set; }
@@ -179,22 +151,24 @@
     [Parameter]
     public string ApartmentId { get; set; } = string.Empty;
 
+    [Parameter]
+    public string LandlordId { get; set; } = string.Empty;
+
     private Room CurrentRoom = new();
     private bool isLoading = false;
     private bool isSaving = false;
     private string saveMessage = "";
     private bool isError = false;
     private bool IsEditing => Room?.Id != null;
-    private bool isNewRoom => Room == null;
 
+    // Bill management
+    private bool showBillModal = false;
+    private decimal CurrentElectricityBill = 0;
+    private decimal CurrentWaterBill = 0;
 
-    // Multiple image handling
-    private List<IBrowserFile> selectedFiles = new();
-    private Dictionary<IBrowserFile, string> imagePreviews = new();
-
-    protected override async Task OnParametersSetAsync()
+    protected override async void OnParametersSet()
     {
-        if (IsVisible)
+        if (IsVisible && Room != null)
         {
             await LoadRoomData();
         }
@@ -202,12 +176,8 @@
 
     private async Task LoadRoomData()
     {
-        // Add a small delay to ensure parameter is set
-        await Task.Delay(1);
-
         if (Room != null)
         {
-            // Editing existing room - create a COMPLETE deep copy to avoid reference issues
             CurrentRoom = new Room
             {
                 Id = Room.Id,
@@ -219,22 +189,20 @@
                 Aircon = Room.Aircon,
                 Status = Room.Status,
                 Description = Room.Description,
-                CreatedAt = Room.CreatedAt,
-                // Create completely new image objects to break any references
-                Images = Room.Images?.Select(img => new RoomImage
-                {
-                    ImageData = (byte[])img.ImageData.Clone(),
-                    ImageContentType = img.ImageContentType,
-                    ImageFileName = img.ImageFileName,
-                    UploadedAt = img.UploadedAt
-                }).ToList() ?? new List<RoomImage>()
+                Images = Room.Images?.ToList() ?? new List<RoomImage>()
             };
+
+            // Load current bills
+            if (IsEditing)
+            {
+                await LoadCurrentBills();
+            }
         }
         else
         {
-            // Creating new room - initialize with defaults
             CurrentRoom = new Room
             {
+                ApartmentId = ApartmentId,
                 UnitNumber = "",
                 RoomType = "Single",
                 RoomPrice = 0,
@@ -246,66 +214,37 @@
             };
         }
 
-        selectedFiles.Clear();
-        imagePreviews.Clear();
-        saveMessage = "";
-        isError = false;
-
-        StateHasChanged();
+        // Reset other fields...
     }
 
-    private async Task CloseModal()
+    private async Task LoadCurrentBills()
     {
-        // Just close the modal - no database operations needed for cancellation
-        await IsVisibleChanged.InvokeAsync(false);
-    }
-
-    private async Task HandleMultipleFilesSelected(InputFileChangeEventArgs e)
-    {
-        foreach (var file in e.GetMultipleFiles())
+        try
         {
-            if (!selectedFiles.Any(f => f.Name == file.Name))
+            var currentBill = await UtilityBillService.GetCurrentBillAsync(CurrentRoom.Id);
+            if (currentBill != null)
             {
-                selectedFiles.Add(file);
-
-                // Create preview
-                var resizedImageFile = await file.RequestImageFileAsync("image/png", 200, 200);
-                var buffer = new byte[resizedImageFile.Size];
-                await resizedImageFile.OpenReadStream().ReadAsync(buffer);
-                var previewUrl = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
-                imagePreviews[file] = previewUrl;
+                CurrentElectricityBill = currentBill.ElectricityBill;
+                CurrentWaterBill = currentBill.WaterBill;
             }
         }
-        StateHasChanged();
-    }
-
-    private string GetImagePreviewUrl(IBrowserFile file)
-    {
-        return imagePreviews.ContainsKey(file) ? imagePreviews[file] : "";
-    }
-
-    private void RemoveNewImage(IBrowserFile file)
-    {
-        selectedFiles.Remove(file);
-        imagePreviews.Remove(file);
-        StateHasChanged();
-    }
-
-    private async Task RemoveExistingImage(int index)
-    {
-        if (index >= 0 && index < CurrentRoom.Images.Count)
+        catch (Exception ex)
         {
-            CurrentRoom.Images.RemoveAt(index);
-
-            // Optional: Show a temporary message
-            saveMessage = $"Image removed. Click 'Save Unit' to confirm changes.";
-            isError = false;
-
-            StateHasChanged();
-
-            // Clear the message after 3 seconds
-            await ClearMessageAfterDelay();
+            Console.WriteLine($"Error loading bills: {ex.Message}");
         }
+    }
+
+    private void OpenBillManagement()
+    {
+        showBillModal = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleBillsSaved()
+    {
+        await LoadCurrentBills();
+        showBillModal = false;
+        StateHasChanged();
     }
 
     private async Task SaveUnit()
@@ -324,44 +263,35 @@
 
         try
         {
-            // Process new image uploads
-            var newImages = new List<RoomImage>();
-            foreach (var file in selectedFiles)
+            // Save room data
+            if (IsEditing)
             {
-                try
+                await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
+
+                // Save utility bills
+                if (CurrentElectricityBill > 0 || CurrentWaterBill > 0)
                 {
-                    var (imageData, contentType, fileName) = await ImageService.ProcessUploadAsync(file);
-                    newImages.Add(new RoomImage
+                    var currentDate = DateTime.UtcNow;
+                    var utilityBill = new UtilityBill
                     {
-                        ImageData = imageData,
-                        ImageContentType = contentType,
-                        ImageFileName = fileName,
-                        UploadedAt = DateTime.UtcNow
-                    });
+                        RoomId = CurrentRoom.Id,
+                        UnitNumber = CurrentRoom.UnitNumber,
+                        LandlordId = LandlordId,
+                        ElectricityBill = CurrentElectricityBill,
+                        WaterBill = CurrentWaterBill,
+                        Month = currentDate.Month,
+                        Year = currentDate.Year,
+                        DueDate = new DateTime(currentDate.Year, currentDate.Month, 1).AddMonths(1)
+                    };
+
+                    await UtilityBillService.CreateOrUpdateBillAsync(utilityBill);
                 }
-                catch (Exception ex)
-                {
-                    saveMessage = $"Error processing {file.Name}: {ex.Message}";
-                    isError = true;
-                    isSaving = false;
-                    StateHasChanged();
-                    return;
-                }
+
+                saveMessage = "Unit updated successfully!";
             }
-
-            // Combine existing images (which may have been modified by removals) and new images
-            // CurrentRoom.Images already reflects any removals from the RemoveExistingImage method
-            var allImages = CurrentRoom.Images.Concat(newImages).ToList();
-            CurrentRoom.Images = allImages;
-
-            Room savedRoom;
-
-            if (isNewRoom)
+            else
             {
-                // Create new room in database
                 var newRoom = await RoomService.CreateRoomAsync(ApartmentId);
-
-                // Update the new room with the entered data
                 newRoom.UnitNumber = CurrentRoom.UnitNumber;
                 newRoom.RoomType = CurrentRoom.RoomType;
                 newRoom.RoomPrice = CurrentRoom.RoomPrice;
@@ -372,25 +302,12 @@
                 newRoom.Images = CurrentRoom.Images;
 
                 await RoomService.UpdateRoomAsync(newRoom.Id, newRoom);
-                savedRoom = newRoom;
+                CurrentRoom = newRoom;
                 saveMessage = "Unit created successfully!";
-            }
-            else
-            {
-                // Update existing room - this will save the modified Images list
-                // The Images list already has the removed images excluded
-                CurrentRoom.ApartmentId = ApartmentId; // Ensure ApartmentId is set
-                await RoomService.UpdateRoomAsync(CurrentRoom.Id, CurrentRoom);
-                savedRoom = CurrentRoom;
-                saveMessage = "Unit updated successfully!";
             }
 
             isError = false;
-
-            // Notify parent component
-            await OnUnitSaved.InvokeAsync(savedRoom);
-
-            // Close modal after delay
+            await OnUnitSaved.InvokeAsync(CurrentRoom);
             await Task.Delay(1500);
             await CloseModal();
         }
@@ -407,10 +324,8 @@
         }
     }
 
-    private async Task ClearMessageAfterDelay()
+    private async Task CloseModal()
     {
-        await Task.Delay(3000);
-        saveMessage = "";
-        StateHasChanged();
+        await IsVisibleChanged.InvokeAsync(false);
     }
 }

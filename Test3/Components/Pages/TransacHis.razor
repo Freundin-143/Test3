@@ -1,4 +1,7 @@
 ﻿@page "/TransacHis"
+@using Test3.Data.Models
+@using Test3.Data.Services
+@inject TransactionService TransactionService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -16,7 +19,6 @@
             <button class="nav-btn transaction-history" @onclick="TransacHistory">Transaction History</button>
         </nav>
 
-
         <div class="bottom-section">
             <button class="account-btn">
                 <span class="icon">👤</span>
@@ -31,6 +33,24 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <div class="header-section">
+            <h2>Transaction History</h2>
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <h3>Total Revenue</h3>
+                    <p class="amount">₱@TotalRevenue.ToString("N2")</p>
+                </div>
+                <div class="summary-card">
+                    <h3>This Month</h3>
+                    <p class="amount">₱@ThisMonthRevenue.ToString("N2")</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Transactions</h3>
+                    <p class="count">@Transactions.Count</p>
+                </div>
+            </div>
+        </div>
+
         <div class="table-container">
             <table class="table table-striped">
                 <thead>
@@ -39,28 +59,34 @@
                         <th>Name of Tenant</th>
                         <th>Unit#</th>
                         <th>Amount</th>
+                        <th>Payment Method</th>
                         <th>Date</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Tenants.Count == 0)
+                    @if (!Transactions.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center">No tenants found.</td>
+                            <td colspan="7" class="text-center no-data">No transactions found.</td>
                         </tr>
                     }
                     else
                     {
-                        @foreach (var tenant in Tenants.Select((value, index) => new { value, index }))
+                        @foreach (var transaction in Transactions.Select((value, index) => new { value, index }))
                         {
                             <tr>
-                                <td>@(tenant.index + 1)</td>
-                                <td>@tenant.value.FullName</td>
-                                <td>@tenant.value.UnitNumber</td>
-
-                                <td>@tenant.value.Contact</td>
-                                <td>@tenant.value.Date.ToShortDateString()</td>
-
+                                <td>@(transaction.index + 1)</td>
+                                <td>@transaction.value.FullName</td>
+                                <td>@transaction.value.UnitNumber</td>
+                                <td>₱@transaction.value.PaymentAmount.ToString("N2")</td>
+                                <td>@transaction.value.PaymentMethod</td>
+                                <td>@transaction.value.PaymentDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <span class="status-badge @transaction.value.Status.ToLower()">
+                                        @transaction.value.Status
+                                    </span>
+                                </td>
                             </tr>
                         }
                     }
@@ -69,27 +95,57 @@
         </div>
     </div>
 </div>
-// Test
+
 @code {
     [Parameter]
     [SupplyParameterFromQuery(Name = "landlordId")]
     public string? LandlordId { get; set; }
 
+    private List<TransactionHistory> Transactions = new();
+    private decimal TotalRevenue = 0;
+    private decimal ThisMonthRevenue = 0;
+    private bool isLoading = true;
 
-    public class TenantModel
+    protected override async Task OnInitializedAsync()
     {
-        public string FullName { get; set; }
-        public int UnitNumber { get; set; }
-        public string Contact { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
+        if (string.IsNullOrEmpty(LandlordId))
+        {
+            // Handle error - redirect to login
+            return;
+        }
+
+        await LoadTransactions();
     }
 
-    private List<TenantModel> Tenants = new();
+    private async Task LoadTransactions()
+    {
+        try
+        {
+            Transactions = await TransactionService.GetTransactionsByLandlordAsync(LandlordId);
+
+            // Calculate totals
+            TotalRevenue = Transactions.Sum(t => t.PaymentAmount);
+
+            var currentMonth = DateTime.Now.Month;
+            var currentYear = DateTime.Now.Year;
+            ThisMonthRevenue = Transactions
+                .Where(t => t.PaymentDate.Month == currentMonth && t.PaymentDate.Year == currentYear)
+                .Sum(t => t.PaymentAmount);
+
+            isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading transactions: {ex.Message}");
+            isLoading = false;
+        }
+    }
 
     private void Logout()
     {
         Navigation.NavigateTo("/Landlord", true);
     }
+
     private void ManageApartment()
     {
         Navigation.NavigateTo($"/ManageApartment?landlordId={LandlordId}", true);
