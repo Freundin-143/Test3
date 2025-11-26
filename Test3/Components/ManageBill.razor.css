@@ -1,0 +1,141 @@
+﻿/* BILL MODAL */
+.bill-modal {
+    width: 480px;
+}
+
+/* Bill form rows */
+.bill-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bill-row label {
+    margin-top: 10px;
+    font-weight: 600;
+    margin-left: 30px;
+    margin-bottom: 6px;
+    display: block;
+    color: #1e293b;
+}
+
+.bill-row .input {
+    margin-left: 30px;
+    width: 80%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: 0.2s;
+    margin-bottom: 10px;
+}
+
+    .bill-row .input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        outline: none;
+    }
+
+/* Modal base styling reused from existing modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.25s ease;
+    z-index: 9999;
+}
+
+    .modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+
+.modal-content.bill-modal {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 0;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.12);
+    animation: scaleIn 0.22s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.96);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #475569;
+}
+
+    .close-btn:hover {
+        color: #1e293b;
+    }
+
+/* Footer */
+.modal-footer {
+    padding: 18px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s ease;
+}
+
+    .btn.cancel {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+        .btn.cancel:hover {
+            background: #cbd5e1;
+        }
+
+    .btn.save {
+        background: #2563eb;
+        color: white;
+    }
+
+        .btn.save:hover {
+            background: #1d4ed8;
+        }

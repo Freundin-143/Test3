@@ -5,6 +5,7 @@
 @inject RoomService RoomService
 @inject ImageService ImageService
 @inject NavigationManager Navigation
+@inject LeaseService LeaseService
 @inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
@@ -131,6 +132,16 @@
                             <p><strong>Beds:</strong> @room.BedCount</p>
                             <p><strong>Aircon:</strong> @(room.Aircon ? "Yes" : "No")</p>
                             <p><strong>Status:</strong> <span class="status-@room.Status.ToLower()">@room.Status</span></p>
+
+                            <!-- Add tenant name display for occupied units -->
+                            @if (room.Status == "Occupied")
+                            {
+                                <p><strong>Tenant:</strong> @GetTenantNameForUnit(room.UnitNumber)</p>
+                            }
+                            else
+                            {
+                                <p><strong>Tenant:</strong> None</p>
+                            }
                         </div>
                         <div class="unit-actions">
                             <button class="edit-unit-btn" @onclick="() => EditUnit(room)">Edit Unit</button>
@@ -268,16 +279,41 @@
     private bool showImagesModal = false;
     private Room? selectedRoomForImages = null;
 
+    private Dictionary<string, string> unitTenantMapping = new();
+
     protected override async Task OnParametersSetAsync()
     {
         if (!string.IsNullOrEmpty(ApartmentId))
         {
             await LoadApartment();
+            await LoadTenantNames(); // Add this line
         }
         else
         {
             isLoading = false;
         }
+    }
+
+    private async Task LoadTenantNames()
+    {
+        try
+        {
+            var leases = await LeaseService.GetLeasesByLandlordAsync(LandlordId);
+            unitTenantMapping = leases
+                .Where(l => l.IsActive)
+                .ToDictionary(l => l.UnitNumber, l => l.FullName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tenant names: {ex.Message}");
+        }
+    }
+
+    private string GetTenantNameForUnit(string unitNumber)
+    {
+        return unitTenantMapping.ContainsKey(unitNumber)
+            ? unitTenantMapping[unitNumber]
+            : "Not assigned";
     }
 
     private async Task LoadApartment()
@@ -306,6 +342,7 @@
             StateHasChanged();
         }
     }
+
 
     private void AddNewUnit()
     {

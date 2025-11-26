@@ -44,6 +44,12 @@ namespace Test3.Data.Services
             return await _leases.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
+        // Add this method to LeaseService.cs
+        public async Task<List<Lease>> GetAllLeasesAsync()
+        {
+            return await _leases.Find(_ => true).ToListAsync();
+        }
+
         // Update lease
         public async Task UpdateLeaseAsync(string id, Lease lease)
         {
