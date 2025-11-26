@@ -1,4 +1,9 @@
-﻿.screen-container {
+﻿* {
+    margin: -5px;
+    padding: 0;
+    box-sizing: border-box;
+}
+.screen-container {
     width: 390px;
     height: 1026px;
     background-color: #64748B;
@@ -110,27 +115,25 @@ nav {
     font-family: 'Archivo Black', sans-serif;
 }
 
-.account-btn, .logout-btn {
-    background: none;
+.logout-btn {
+    background: white;
+    color: #64748B;
     border: none;
+    width: 140px;
+    height: 30px;
+    padding: 0;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 1rem;
+    font-weight: bold;
     font-family: 'Archivo Black', sans-serif;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 200px;
-    transition: all 0.2s;
+    font-size: 16px;
+    transition: background 0.2s;
 }
 
-    .account-btn:hover, .logout-btn:hover {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+    .logout-btn:hover {
+        background: #e0e0e0;
     }
-
-.main-content {
+    .main-content {
     padding: 0.5rem 3rem 1rem 3rem;
     background-color: white;
     display: flex;
@@ -232,16 +235,31 @@ nav {
 }
 
     .unit-info h4 {
-        margin: 0;
-        font-size: 1rem;
+        margin: -0.3rem;
+        align-self: center;
+        margin-bottom: 10px;
+        font-size: 16px;
         font-family: 'Archivo Black', sans-serif;
     }
 
     .unit-info p {
-        margin: 0.3rem 0 0 0;
+        margin: -0.3rem;
+        margin-bottom: 5px;
+        margin-left: 5px;
         font-size: 0.9rem;
         color: #333;
-        font-family: 'Archivo Black', sans-serif;
+        font-family: Arial, sans-serif;
+        line-height: 1.4;
+    }
+
+
+    .unit-info small {
+        margin: -0.3rem;
+        margin-bottom: 5px;
+        margin-left: 5px;
+        font-size: 0.9rem;
+        color: #333;
+        font-family: Arial, sans-serif;
         line-height: 1.4;
     }
 
@@ -290,10 +308,26 @@ p, span, div {
     bottom: 2rem;
     right: 2rem;
 }
-
-.delete-btn {
-    background: #dc3545;
+.edit-btn {
+    background: #0077B6;
     color: white;
+    margin-right: 70px;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 12px;
+}
+
+    .edit-btn:hover {
+        background: #6BAED6;
+    }
+.delete-btn {
+    background: #BA110C;
+    color: white;
+    margin-right: 10px;
     border: none;
     padding: 0.4rem 1rem;
     border-radius: 8px;
@@ -304,7 +338,7 @@ p, span, div {
 }
 
     .delete-btn:hover {
-        background: #c82333;
+        background: #E3242B;
     }
 
 .loading {

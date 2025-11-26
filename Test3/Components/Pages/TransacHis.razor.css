@@ -1,4 +1,9 @@
-﻿.screen-container {
+﻿* {
+    margin: -5px;
+    padding: 0;
+    box-sizing: border-box;
+}
+.screen-container {
     width: 390px;
     height: 1026px;
     margin: 0 auto;
@@ -113,27 +118,24 @@ nav {
     padding-bottom: 1.5rem;
     font-family: 'Archivo Black', sans-serif;
 }
-
-.account-btn, .logout-btn {
-    background: none;
+.logout-btn {
+    background: white;
+    color: #64748B;
     border: none;
+    width: 140px;
+    height: 30px;
+    padding: 0;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 1rem;
+    font-weight: bold;
     font-family: 'Archivo Black', sans-serif;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 200px;
-    transition: all 0.2s;
+    font-size: 16px;
+    transition: background 0.2s;
 }
 
-    .account-btn:hover, .logout-btn:hover {
-        color: white;
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+    .logout-btn:hover {
+        background: #e0e0e0;
     }
-
 .main-content {
     padding: 0;
     background-color: white;

@@ -21,7 +21,8 @@
                 <input type="text"
                        placeholder="Search by apartment name or location"
                        @bind="searchTerm"
-                       @bind:event="oninput" />
+                       @bind:event="oninput"
+                       @onkeypress="OnKeyPress" />
                 <button><i class="fa fa-search"></i></button>
             </div>
         </div>
@@ -123,6 +124,19 @@
 
         isLoading = false;
         StateHasChanged();
+    }
+
+    private async Task SearchApartments()
+    {
+        await LoadApartments();
+    }
+
+    private async Task OnKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchApartments();
+        }
     }
 
     private async void OnSearchChanged(ChangeEventArgs e)
