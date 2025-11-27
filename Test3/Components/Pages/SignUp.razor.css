@@ -1,4 +1,4 @@
-﻿body {
+body {
     font-family: Arial, sans-serif;
     background-color: #f2f2f2;
     margin: 0;
@@ -15,22 +15,82 @@
 }
 
 .profile-header {
+    position: relative;
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: space-between;
-    background-color: #ddd;
-    padding: 1rem 2rem;
+    background-color: #64748B;
+    padding: 1rem;
+    text-align: center;
+    gap: 3rem;
 }
 
-    .profile-header h2 {
-        margin: 0;
-        font-weight: 600;
+.back-btn {
+    position: absolute;
+    left: 30px;
+    top: 25px;
+    background: #ffffff;
+    color: #64748B;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
+
+    .back-btn:hover {
+        background: #f0f0f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
-    .profile-header .logo img {
-        width: 50px;
-        height: 50px;
-        object-fit: contain;
+
+
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: white;
+    text-align: center;
+}
+
+.photo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* centers photo + input horizontally */
+    justify-content: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.file-input-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    margin-left: 10px;
+}
+
+.custom-file-input {
+    position: relative; /* important */
+    width: 280px;
+    background: #ffffff;
+    padding: 10px 5px;
+    border-radius: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+
+    .custom-file-input:hover {
+        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
     }
 
 .edit-btn {
@@ -42,11 +102,6 @@
     text-decoration: underline;
 }
 
-.photo-section {
-    text-align: center;
-    padding: 2rem 0 1rem 0;
-    background-color: #ddd;
-}
 
 .photo-placeholder {
     width: 100px;
@@ -107,3 +162,70 @@ input {
 .insert-photo-file-input {
     width: 200px;
 }
+
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+    .select-wrapper select {
+        width: 105%;
+        padding: 0.6rem 1rem;
+        margin-bottom: 1rem;
+        border: none;
+        border-radius: 20px;
+        background-color: #e6e6e6;
+        color: #333;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+        /* On enabled (match your input:enabled style) */
+        .select-wrapper select:enabled {
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+
+.save-btn {
+    display: block;
+    margin: 0 auto 2rem auto; /* centers horizontally */
+    padding: 0.7rem 2rem;
+    background: #64748B;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+    .save-btn:hover {
+        background: #55627A;
+    }
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+    .password-wrapper input {
+        width: 100%;
+        padding-right: 10px; /* space for the eye button */
+    }
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-80%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    opacity: 0.6;
+}
+
+    .toggle-password:hover {
+        opacity: 1;
+    }

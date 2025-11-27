@@ -30,6 +30,8 @@ builder.Services.AddScoped<RoomService>();
 builder.Services.AddScoped<LandlordService>();
 builder.Services.AddScoped<ImageService>();
 builder.Services.AddScoped<LeaseService>();
+builder.Services.AddScoped<UtilityBillService>();
+builder.Services.AddScoped<TransactionService>();
 
 var app = builder.Build();
 

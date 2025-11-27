@@ -1,0 +1,153 @@
+﻿@using Test3.Data.Models
+@using Test3.Data.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject UtilityBillService UtilityBillService
+
+<div class="modal-overlay @(IsVisible ? "visible" : "")">
+    <div class="modal-content bill-modal">
+        <div class="modal-header">
+            <h3>Manage Monthly Bills - @UnitNumber</h3>
+            <button class="close-btn" @onclick="CloseModal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="bill-form">
+                <div class="bill-row">
+                    <label>Electricity (₱)</label>
+                    <input type="number"
+                           @bind="ElectricityBill"
+                           class="input"
+                           step="0.01"
+                           placeholder="0.00" />
+                </div>
+
+                <div class="bill-row">
+                    <label>Water (₱)</label>
+                    <input type="number"
+                           @bind="WaterBill"
+                           class="input"
+                           step="0.01"
+                           placeholder="0.00" />
+                </div>
+
+                <div class="bill-info">
+                    <p><strong>Due Date:</strong> @DueDate.ToString("MMM dd, yyyy")</p>
+                    <p><strong>Total Amount:</strong> ₱@TotalAmount.ToString("N2")</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <div class="message @(IsError ? "error" : "success")">
+                    @Message
+                </div>
+            }
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn cancel" @onclick="CloseModal" disabled="@IsSaving">Cancel</button>
+            <button class="btn save" @onclick="SaveBills" disabled="@IsSaving">
+                @(IsSaving ? "Saving..." : "Save Bills")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public string RoomId { get; set; } = string.Empty;
+    [Parameter] public string UnitNumber { get; set; } = string.Empty;
+    [Parameter] public string LandlordId { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnBillsSaved { get; set; }
+
+    private bool IsSaving = false;
+    private decimal ElectricityBill { get; set; }
+    private decimal WaterBill { get; set; }
+    private string Message { get; set; } = "";
+    private bool IsError { get; set; }
+    private DateTime DueDate => new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1);
+    private decimal TotalAmount => ElectricityBill + WaterBill;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && !string.IsNullOrEmpty(RoomId))
+        {
+            await LoadCurrentBills();
+        }
+    }
+
+    private async Task LoadCurrentBills()
+    {
+        try
+        {
+            var currentBill = await UtilityBillService.GetCurrentBillAsync(RoomId);
+            if (currentBill != null)
+            {
+                ElectricityBill = currentBill.ElectricityBill;
+                WaterBill = currentBill.WaterBill;
+            }
+            else
+            {
+                ElectricityBill = 0;
+                WaterBill = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = "Error loading current bills.";
+            IsError = true;
+            Console.WriteLine($"Error loading bills: {ex.Message}");
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task SaveBills()
+    {
+        IsSaving = true;
+        Message = "";
+        IsError = false;
+
+        try
+        {
+            var currentDate = DateTime.UtcNow;
+            var utilityBill = new UtilityBill
+            {
+                RoomId = RoomId,
+                UnitNumber = UnitNumber,
+                LandlordId = LandlordId,
+                ElectricityBill = ElectricityBill,
+                WaterBill = WaterBill,
+                Month = currentDate.Month,
+                Year = currentDate.Year,
+                DueDate = DueDate,
+                IsPaid = false
+            };
+
+            await UtilityBillService.CreateOrUpdateBillAsync(utilityBill);
+
+            Message = "Bills saved successfully!";
+            IsError = false;
+
+            await OnBillsSaved.InvokeAsync();
+            await Task.Delay(1500);
+            await CloseModal();
+        }
+        catch (Exception ex)
+        {
+            Message = "Error saving bills. Please try again.";
+            IsError = true;
+            Console.WriteLine($"Error saving bills: {ex.Message}");
+        }
+        finally
+        {
+            IsSaving = false;
+            StateHasChanged();
+        }
+    }
+}
