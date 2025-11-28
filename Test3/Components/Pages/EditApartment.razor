@@ -490,9 +490,23 @@
 
     private async Task HandleUnitSaved(Room savedRoom)
     {
-        // Refresh the entire list from database to include the new room
-        await LoadApartment();
-        StateHasChanged();
+        try
+        {
+            // Only reload the rooms list, NOT the apartment data
+            rooms = await RoomService.GetRoomsByApartmentIdAsync(ApartmentId);
+
+            // Reload tenant mapping to reflect any status changes
+            await LoadTenantNames();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error refreshing rooms: {ex.Message}");
+            saveMessage = "Unit saved, but error refreshing list.";
+            isError = true;
+            StateHasChanged();
+        }
     }
 
     // Your existing methods remain the same

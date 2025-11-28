@@ -94,12 +94,11 @@
     </div>
 
     <!-- Add Tenant Modal -->
+    <!-- Add Tenant Modal -->
     @if (ShowModal)
     {
         <div class="modal-overlay">
             <div class="modal-box">
-
-
                 <div class="modal-body">
                     <form>
                         <div class="form-group">
@@ -112,13 +111,36 @@
                             }
                             else
                             {
-                                <select class="form-control" @bind="selectedUserId" @bind:after="OnUserSelected">
-                                    <option value="">Select Tenant</option>
-                                    @foreach (var user in registeredUsers)
+                                <div class="search-dropdown">
+                                    <input type="text"
+                                           class="form-control search-input"
+                                           placeholder="Search tenant by name..."
+                                           value="@userSearchTerm"
+                                           @oninput="HandleSearchInput"
+                                           @onfocus="() => showUserDropdown = true" />
+
+                                    @if (showUserDropdown && filteredUsers.Any())
                                     {
-                                        <option value="@user.Id">@FormatUserName(user)</option>
+                                        <div class="dropdown-list">
+                                            @foreach (var user in filteredUsers)
+                                            {
+                                                <div class="dropdown-item" @onclick="() => SelectUser(user)">
+                                                    <strong>@FormatUserName(user)</strong>
+                                                    @if (!string.IsNullOrWhiteSpace(user.Email))
+                                                    {
+                                                        <small class="user-email">@user.Email</small>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
                                     }
-                                </select>
+                                    else if (showUserDropdown && !string.IsNullOrWhiteSpace(userSearchTerm) && !filteredUsers.Any())
+                                    {
+                                        <div class="dropdown-list">
+                                            <div class="dropdown-item no-results">No users found matching "@userSearchTerm"</div>
+                                        </div>
+                                    }
+                                </div>
                             }
                             @if (validationErrors.ContainsKey("FullName"))
                             {
@@ -136,11 +158,13 @@
                             }
                             else
                             {
-                                <select class="form-control" @bind="newLease.UnitNumber">
+                                <select class="form-control" @bind="selectedUnitKey" @bind:after="OnUnitSelected">
                                     <option value="">Select Unit</option>
                                     @foreach (var unit in availableUnits)
                                     {
-                                        <option value="@unit.UnitNumber">@unit.UnitNumber</option>
+                                        <option value="@GetUnitKey(unit)">
+                                            @unit.UnitNumber - @GetApartmentName(unit.ApartmentId)
+                                        </option>
                                     }
                                 </select>
                             }
@@ -200,7 +224,8 @@
                         <div class="form-group">
                             <label class="required">Monthly Rent (₱)</label>
                             <input class="form-control" type="number" @bind="newLease.RentAmount"
-                                   step="0.01" placeholder="0.00" />
+                                   step="0.01" placeholder="0.00" readonly />
+                            <small class="form-text">Automatically filled based on selected unit</small>
                             @if (validationErrors.ContainsKey("RentAmount"))
                             {
                                 <div class="validation-error">@validationErrors["RentAmount"]</div>
@@ -246,6 +271,7 @@
     }
 </div>
 
+
 @code {
     [Parameter]
     [SupplyParameterFromQuery(Name = "landlordId")]
@@ -254,8 +280,11 @@
     private List<Lease> leases = new();
     private List<Room> availableUnits = new();
     private List<User> registeredUsers = new();
+    private List<User> filteredUsers = new();
     private Lease newLease = new();
     private string selectedUserId = "";
+    private string userSearchTerm = "";
+    private bool showUserDropdown = false;
     private bool isUserSelected = false;
     private bool ShowModal = false;
     private bool isLoading = true;
@@ -264,6 +293,8 @@
     private string saveMessage = "";
     private bool isSaveError = false;
     private Dictionary<string, string> validationErrors = new();
+    private Dictionary<string, string> apartmentNames = new();
+    private string selectedUnitKey = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -292,8 +323,12 @@
             var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
             availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
 
+            // *** ADD THIS: Load apartment names ***
+            await LoadApartmentNames();
+
             // Load registered users from UserService
             registeredUsers = await UserService.GetAllUsersAsync();
+            filteredUsers = registeredUsers;
         }
         catch (Exception ex)
         {
@@ -305,6 +340,32 @@
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    private async Task LoadApartmentNames()
+    {
+        try
+        {
+            var apartments = await ApartmentService.GetApartmentsByLandlordIdAsync(LandlordId);
+            apartmentNames = apartments.ToDictionary(a => a.Id, a => a.ApartmentName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading apartment names: {ex.Message}");
+            apartmentNames = new Dictionary<string, string>();
+        }
+    }
+
+    private string GetApartmentName(string apartmentId)
+    {
+        return apartmentNames.ContainsKey(apartmentId)
+            ? apartmentNames[apartmentId]
+            : "Unknown Apartment";
+    }
+
+    private string GetUnitKey(Room unit)
+    {
+        return $"{unit.ApartmentId}|{unit.UnitNumber}";
     }
 
     private string FormatUserName(User user)
@@ -321,29 +382,74 @@
         if (!string.IsNullOrWhiteSpace(user.LastName))
             parts.Add(user.LastName);
 
-        return string.Join(", ", parts);
+        return string.Join(" ", parts);
     }
 
-    private void OnUserSelected()
+    private void HandleSearchInput(ChangeEventArgs e)
     {
-        if (!string.IsNullOrEmpty(selectedUserId))
-        {
-            var selectedUser = registeredUsers.FirstOrDefault(u => u.Id == selectedUserId);
+        userSearchTerm = e.Value?.ToString() ?? "";
+        FilterUsers();
+    }
 
-            if (selectedUser != null)
-            {
-                newLease.FullName = FormatUserName(selectedUser);
-                newLease.Contact = selectedUser.ContactNumber ?? "";
-                newLease.Email = selectedUser.Email ?? "";
-                isUserSelected = true;
-            }
+    private void FilterUsers()
+    {
+        if (string.IsNullOrWhiteSpace(userSearchTerm))
+        {
+            filteredUsers = registeredUsers;
         }
         else
         {
-            isUserSelected = false;
+            var searchLower = userSearchTerm.ToLower();
+            filteredUsers = registeredUsers.Where(u =>
+                (u.FirstName?.ToLower().Contains(searchLower) ?? false) ||
+                (u.MiddleName?.ToLower().Contains(searchLower) ?? false) ||
+                (u.LastName?.ToLower().Contains(searchLower) ?? false) ||
+                (u.Email?.ToLower().Contains(searchLower) ?? false)
+            ).ToList();
         }
+        StateHasChanged();
     }
 
+
+    private void SelectUser(User user)
+    {
+        selectedUserId = user.Id;
+        newLease.FullName = FormatUserName(user);
+        newLease.Contact = user.ContactNumber ?? "";
+        newLease.Email = user.Email ?? "";
+        userSearchTerm = FormatUserName(user);
+        isUserSelected = true;
+        showUserDropdown = false;
+        StateHasChanged();
+    }
+
+    private void ClearUserSelection()
+    {
+        selectedUserId = "";
+        newLease.FullName = "";
+        newLease.Contact = "";
+        newLease.Email = "";
+        userSearchTerm = "";
+        isUserSelected = false;
+        showUserDropdown = false;
+        filteredUsers = registeredUsers;
+        StateHasChanged();
+    }
+
+    private void OnUnitSelected()
+    {
+        if (!string.IsNullOrWhiteSpace(selectedUnitKey))
+        {
+            // Find the exact unit using the unique key
+            var selectedUnit = availableUnits.FirstOrDefault(u => GetUnitKey(u) == selectedUnitKey);
+            if (selectedUnit != null)
+            {
+                newLease.UnitNumber = selectedUnit.UnitNumber;
+                newLease.RentAmount = selectedUnit.RoomPrice;
+                StateHasChanged();
+            }
+        }
+    }
 
     private async void ShowAddModal()
     {
@@ -355,7 +461,10 @@
 
         newLease = new Lease { LandlordId = LandlordId, MoveInDate = DateTime.Today };
         selectedUserId = "";
+        userSearchTerm = "";
         isUserSelected = false;
+        showUserDropdown = false;
+        selectedUnitKey = "";
         validationErrors.Clear();
         saveMessage = "";
         isSaveError = false;
@@ -375,6 +484,9 @@
             var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
             var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
             availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
+
+            // *** ADD THIS: Refresh apartment names when loading units ***
+            await LoadApartmentNames();
         }
         catch (Exception ex)
         {
@@ -387,11 +499,13 @@
         try
         {
             registeredUsers = await UserService.GetAllUsersAsync();
+            filteredUsers = registeredUsers;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading registered users: {ex.Message}");
             registeredUsers = new List<User>();
+            filteredUsers = new List<User>();
         }
     }
 
@@ -402,7 +516,10 @@
         saveMessage = "";
         isSaveError = false;
         selectedUserId = "";
+        userSearchTerm = "";
         isUserSelected = false;
+        showUserDropdown = false;
+        selectedUnitKey = "";
         StateHasChanged();
     }
 

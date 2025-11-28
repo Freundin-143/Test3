@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: whitesmoke;
+    background-color: white;
     min-height: 100vh;
     padding: 20px;
 }
@@ -22,13 +22,20 @@ body {
 /* HEADER SUMMARY SECTION */
 
 .header-section {
-    background-color: #8599B6;
+    background-color: #64748B;
     border-radius: 20px;
     padding-bottom: 30px;
     margin-bottom: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     overflow: hidden;
 }
+
+.tenant-info {
+    font-size: 20px;
+    text-align: center;
+    color: white;
+}
+
 
 .header-title-row {
     background-color: rgba(0,0,0,0.15);
@@ -37,6 +44,7 @@ body {
     justify-content: center;
     padding: 18px 20px;
     position: relative;
+    margin-top: 20px;
 }
 
 .header-section h2 {
@@ -63,15 +71,20 @@ body {
 }
 
     .back_btn:hover {
-        transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
 
 .info-row {
     display: flex;
+    align-self: center;
     flex-direction: column;
     gap: 8px;
-    padding-left: 200px;
+    width: 190px;
+    border-bottom: 2px solid white;
+    font-size: 20px;
+    color: white;
+    font-weight: bold;
+    margin-left: 280px;
 }
 
 .info-grid {
@@ -82,9 +95,9 @@ body {
 }
 
 .info-row label {
-    color: #ffffff;
+    color: white;
     font-weight: 600;
-    font-size: 17px;
+    font-size: 20px;
 }
 
 .info-row input {
@@ -102,7 +115,7 @@ body {
 
 
 .payment-section {
-    background-color: #8599B6;
+    background-color: #64748B;
     border-radius: 20px;
     padding: 0;
     margin-bottom: 10px;
@@ -132,8 +145,6 @@ body {
     font-weight: 600;
     margin-left: 160px;
 }
-
-
 
 .form-group input,
 .payment-method-select {
@@ -167,15 +178,13 @@ body {
 
 /* PAYMENT HISTORY TABLE */
 
-
 .history-section {
     background-color: #64748B;
     border-radius: 20px;
     padding: 0;
     padding-bottom: 20px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    overflow: visible;
-    margin-bottom: 30px;
+    overflow: hidden;
+    margin-bottom: 10px;
 }
 
     .history-section h2 {
@@ -212,39 +221,23 @@ thead {
 
 th {
     padding: 16px;
-    color: white;
-    font-weight: 600;
+    color: #64748B;
+    font-weight: 900;
     text-align: center;
-    border: 1px solid #4a5568;
+    background: white;
 }
 
 tbody {
-    background: white;
+    background: #64748B;
 }
 
 td {
     padding: 16px;
     color: #2d3748;
     text-align: center;
-    border: 1px solid #e2e8f0;
+    border: 2px solid white;
     font-weight: 500;
 }
-
-tbody tr {
-    background: white;
-}
-
-    tbody tr:hover {
-        background: #f7fafc;
-    }
-
-    tbody tr:nth-child(even) {
-        background: #f8f9fa;
-    }
-
-        tbody tr:nth-child(even):hover {
-            background: #e9ecef;
-        }
 
 /* Status badge */
 .status-badge {
@@ -370,13 +363,12 @@ tbody tr {
 
 /* Current Month Payment Highlight */
 .current-month-payment {
-    background: #e3f2fd !important;
-    border-left: 4px solid #2196f3 !important;
+    background: #64748B !important;
 }
 
     .current-month-payment td {
         font-weight: 700;
-        color: #1565c0;
+        color: white;
     }
 
 /* Submit Button States */

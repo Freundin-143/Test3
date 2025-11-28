@@ -2,6 +2,7 @@
 @using Test3.Data.Models
 @using Test3.Data.Services
 @inject ApartmentService ApartmentService
+@inject RoomService RoomService
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
@@ -67,7 +68,7 @@
                             <div class="unit-info">
                                 <h4>@(string.IsNullOrEmpty(apartment.ApartmentName) ? "New Apartment" : apartment.ApartmentName)</h4>
                                 <p>@(string.IsNullOrEmpty(apartment.Address) ? "Address not set" : apartment.Address)</p>
-                                <small>Rooms: @apartment.TotalRooms total, @apartment.AvailableRooms available</small>
+                                <small>Rooms: @apartmentRoomStats[apartment.Id].TotalRooms total, @apartmentRoomStats[apartment.Id].AvailableRooms available</small>
                             </div>
                             <div class="card-actions">
                                 <button class="edit-btn" @onclick="() => EditApartment(apartment.Id)">Edit Apartment</button>
@@ -115,6 +116,7 @@
     public string? LandlordId { get; set; }
 
     private List<Apartment> apartments = new();
+    private Dictionary<string, (int TotalRooms, int AvailableRooms)> apartmentRoomStats = new();
     private bool isLoading = true;
     private bool showDeleteModal = false;
     private Apartment? apartmentToDelete;
@@ -141,12 +143,20 @@
     {
         isLoading = true;
         errorMessage = "";
+        apartmentRoomStats.Clear();
 
         try
         {
             Console.WriteLine($"Loading apartments for landlord: {LandlordId}");
             apartments = await ApartmentService.GetApartmentsByLandlordIdAsync(LandlordId!);
             Console.WriteLine($"Found {apartments.Count} apartments");
+
+            // Load room statistics for each apartment
+            foreach (var apartment in apartments)
+            {
+                var stats = await RoomService.GetRoomStatsAsync(apartment.Id);
+                apartmentRoomStats[apartment.Id] = stats;
+            }
         }
         catch (Exception ex)
         {
@@ -177,8 +187,10 @@
                 AvailableRooms = 0
             };
 
-            await ApartmentService.CreateApartmentAsync(newApartment);
-            await LoadApartments(); // Refresh the list
+            var createdApartment = await ApartmentService.CreateApartmentAsync(newApartment);
+
+            // Navigate immediately to edit the new apartment
+            Navigation.NavigateTo($"/EditApartment/{createdApartment.Id}?landlordId={LandlordId}");
         }
         catch (Exception ex)
         {
@@ -275,5 +287,4 @@
     {
         Navigation.NavigateTo($"/TransacHis?landlordId={LandlordId}", true);
     }
-
 }

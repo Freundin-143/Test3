@@ -1,5 +1,5 @@
 ﻿* {
-    margin: -5px;
+    margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
@@ -436,3 +436,107 @@ nav {
     .btn-secondary:hover {
         background: #666;
     }
+
+/* Fixed Search Dropdown Styles */
+.modal-body .search-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.modal-body .search-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background-color: white;
+    font-family: Arial, sans-serif;
+}
+
+    .modal-body .search-input:focus {
+        outline: none;
+        border-color: #64748B;
+        box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+    }
+
+.modal-body .dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    margin-top: -1px;
+}
+
+.modal-body .dropdown-item {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+    .modal-body .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .modal-body .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .modal-body .dropdown-item strong {
+        display: block;
+        color: #333;
+        margin-bottom: 4px;
+        font-weight: bold;
+    }
+
+    .modal-body .dropdown-item .user-email {
+        display: block;
+        color: #666;
+        font-size: 12px;
+        font-style: italic;
+    }
+
+    .modal-body .dropdown-item.no-results {
+        color: #999;
+        cursor: default;
+        text-align: center;
+        font-style: italic;
+    }
+
+        .modal-body .dropdown-item.no-results:hover {
+            background-color: white;
+        }
+
+.form-text {
+    color: #6c757d;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    font-family: Arial, sans-serif;
+}
+
+/* Ensure modal body has proper z-index */
+.modal-body {
+    position: relative;
+    z-index: 1;
+}
+
+/* Fix for any global styles affecting the modal */
+.modal-overlay * {
+    box-sizing: border-box;
+}
+
+.modal-box * {
+    box-sizing: border-box;
+}

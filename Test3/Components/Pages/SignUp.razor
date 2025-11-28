@@ -5,13 +5,12 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Test3.Data.Models
 @using Test3.Data.Services
+@using System.Text.RegularExpressions
 @inject IJSRuntime JSRuntime
 
 <div class="profile-container">
     <header class="profile-header">
         <button class="back-btn" @onclick="NavigateToLogin"> Back </button>
-
-
 
         <div class="photo-section">
             <h2 class="section-title">Tenant's Personal Information</h2>
@@ -34,11 +33,8 @@
                                accept=".png,.jpg,.jpeg"
                                class="hidden-file-input" />
                 </label>
-
-
             </div>
         </div>
-
     </header>
 
     <div class="info-section">
@@ -62,9 +58,12 @@
                 </select>
             </div>
 
-
             <label>Contact Number:</label>
-            <input @bind="user.ContactNumber" />
+            <input @bind="user.ContactNumber" placeholder="63XXXXXXXXXX" maxlength="12" />
+            @if (!string.IsNullOrEmpty(contactNumberError))
+            {
+                <p class="error-text">@contactNumberError</p>
+            }
         </div>
 
         <div class="info-column">
@@ -74,7 +73,11 @@
                    max="@maxBirthdate.ToString("yyyy-MM-dd")" />
 
             <label>Email Address:</label>
-            <input type="email" @bind="user.Email" />
+            <input type="email" @bind="user.Email" placeholder="example@domain.com" />
+            @if (!string.IsNullOrEmpty(emailError))
+            {
+                <p class="error-text">@emailError</p>
+            }
 
             <label>Username:</label>
             <input @bind="user.Username" />
@@ -84,21 +87,57 @@
                 <input type="password" @bind="user.Password" id="passwordInput" />
                 <button type="button" class="toggle-password" onclick="togglePassword()">Show</button>
             </div>
-
+            <div class="password-requirements">
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Password requirements:<br />
+                    • 8+ minimum characters<br />
+                    • Contains uppercase and lowercase letters<br />
+                    • Contains numbers
+                </p>
+            </div>
+            @if (!string.IsNullOrEmpty(passwordError))
+            {
+                <p class="error-text">@passwordError</p>
+            }
         </div>
     </div>
 
     <button class="save-btn" @onclick="SignUpUser">SIGN UP</button>
 
-    <p class="message">@message</p>
+    <p class="@(isError ? "error-message" : "success-message")">@message</p>
 </div>
 
+<style>
+    .error-text {
+        color: #d32f2f;
+        font-size: 12px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
 
+    .error-message {
+        color: #d32f2f;
+        font-weight: bold;
+    }
+
+    .success-message {
+        color: #388e3c;
+        font-weight: bold;
+    }
+
+    .password-requirements {
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+</style>
 
 @code {
     private User user = new();
     private string message = "";
     private string fileError = "";
+    private string contactNumberError = "";
+    private string emailError = "";
+    private string passwordError = "";
     private bool isLoading = false;
     private bool isError = false;
     private DateTime minBirthdate;
@@ -119,11 +158,116 @@
         user.Birthdate = maxBirthdate.AddYears(-30);
     }
 
+    private bool ValidateContactNumber()
+    {
+        contactNumberError = "";
+
+        if (string.IsNullOrWhiteSpace(user.ContactNumber))
+        {
+            contactNumberError = "Contact number is required.";
+            return false;
+        }
+
+        // Remove any spaces or dashes
+        var cleanNumber = user.ContactNumber.Replace(" ", "").Replace("-", "");
+
+        // Check if it contains only digits
+        if (!Regex.IsMatch(cleanNumber, @"^\d+$"))
+        {
+            contactNumberError = "Contact number must contain only digits.";
+            return false;
+        }
+
+        // Check if it starts with 63
+        if (!cleanNumber.StartsWith("63"))
+        {
+            contactNumberError = "Contact number must start with 63 (Philippines country code).";
+            return false;
+        }
+
+        // Check if length is exactly 12
+        if (cleanNumber.Length != 12)
+        {
+            contactNumberError = "Contact number must be exactly 12 digits (including 63).";
+            return false;
+        }
+
+        // Update the user object with cleaned number
+        user.ContactNumber = cleanNumber;
+        return true;
+    }
+
+    private bool ValidateEmail()
+    {
+        emailError = "";
+
+        if (string.IsNullOrWhiteSpace(user.Email))
+        {
+            emailError = "Email address is required.";
+            return false;
+        }
+
+        // Email validation pattern
+        var emailPattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+
+        if (!Regex.IsMatch(user.Email, emailPattern))
+        {
+            emailError = "Please enter a valid email address (e.g., example@domain.com).";
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidatePassword()
+    {
+        passwordError = "";
+
+        if (string.IsNullOrWhiteSpace(user.Password))
+        {
+            passwordError = "Password is required.";
+            return false;
+        }
+
+        // Check minimum length
+        if (user.Password.Length < 8)
+        {
+            passwordError = "Password must be at least 8 characters long.";
+            return false;
+        }
+
+        // Check for uppercase letter
+        if (!Regex.IsMatch(user.Password, @"[A-Z]"))
+        {
+            passwordError = "Password must contain at least one uppercase letter.";
+            return false;
+        }
+
+        // Check for lowercase letter
+        if (!Regex.IsMatch(user.Password, @"[a-z]"))
+        {
+            passwordError = "Password must contain at least one lowercase letter.";
+            return false;
+        }
+
+        // Check for number
+        if (!Regex.IsMatch(user.Password, @"\d"))
+        {
+            passwordError = "Password must contain at least one number.";
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task SignUpUser()
     {
         // Reset messages
         message = "";
         fileError = "";
+        contactNumberError = "";
+        emailError = "";
+        passwordError = "";
         isError = false;
         isLoading = true;
 
@@ -132,13 +276,31 @@
             // Validate required fields
             if (string.IsNullOrWhiteSpace(user.FirstName) ||
                 string.IsNullOrWhiteSpace(user.LastName) ||
-                string.IsNullOrWhiteSpace(user.Email) ||
                 string.IsNullOrWhiteSpace(user.Gender) ||
-                string.IsNullOrWhiteSpace(user.Username) ||
-                string.IsNullOrWhiteSpace(user.ContactNumber) ||
-                string.IsNullOrWhiteSpace(user.Password))
+                string.IsNullOrWhiteSpace(user.Username))
             {
                 message = "Please fill all required fields.";
+                isError = true;
+                return;
+            }
+
+            // Validate contact number
+            if (!ValidateContactNumber())
+            {
+                isError = true;
+                return;
+            }
+
+            // Validate email
+            if (!ValidateEmail())
+            {
+                isError = true;
+                return;
+            }
+
+            // Validate password
+            if (!ValidatePassword())
+            {
                 isError = true;
                 return;
             }
@@ -174,6 +336,7 @@
             StateHasChanged();
         }
     }
+
     private void NavigateToLogin()
     {
         Navigation.NavigateTo("/");
@@ -245,6 +408,13 @@
 <script>
     function togglePassword() {
         const input = document.getElementById('passwordInput');
-        input.type = input.type === 'password' ? 'text' : 'password';
+        const button = event.target;
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            button.textContent = 'Show';
+        }
     }
 </script>
