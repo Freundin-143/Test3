@@ -3,6 +3,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 .screen-container {
     width: 390px;
     height: 1026px;
@@ -37,10 +38,7 @@ html, body {
     flex-direction: column;
     align-items: center;
     padding: 2.5rem 0;
-    height: 100vh;
-    left: 0;
-    top: 0;
-    width: 280px;
+    height: 100%;
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
 }
@@ -117,6 +115,7 @@ nav {
     padding-bottom: 1.5rem;
     font-family: 'Archivo Black', sans-serif;
 }
+
 .logout-btn {
     background: white;
     color: #64748B;
@@ -135,30 +134,48 @@ nav {
     .logout-btn:hover {
         background: #e0e0e0;
     }
+
 .main-content {
     padding: 0.5rem 3rem 1rem 3rem;
     background-color: white;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    height: 100vh;
+    height: 100%;
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
     overflow-y: auto;
-    align-items: flex-start;
 }
 
-.header {
+
+.header-section {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    font-family: 'Archivo Black', sans-serif;
-    background: #64748B;
-    padding: 1rem 1.5rem;
-    border-radius: 20px;
-    color: white;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 15px;
 }
+
+    .header-section h2 {
+        margin: 10px 0 12px 0;
+    }
+
+.btn-add-tenant {
+    background: #64748B;
+    color: white;
+    border: none;
+    width: 150px;
+    height: 45px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 15px;
+    transition: background 0.2s;
+}
+
+    .btn-add-tenant:hover {
+        background: #556079;
+    }
 
 .stats {
     display: flex;
@@ -300,9 +317,12 @@ nav {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
+    z-index: 9999;
 }
 
 .modal-box {
+    position: relative;
     background: white;
     padding: 35px 40px;
     width: 500px;
@@ -314,12 +334,13 @@ nav {
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
     .form-group label {
+        display: block;
         font-weight: bold;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         font-size: 14px;
         color: #333;
     }
@@ -340,6 +361,23 @@ nav {
         box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
     }
 
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #444;
+    font-weight: bold;
+}
+
+    .modal-close:hover {
+        color: #000;
+        transform: scale(1.1);
+    }
+
 .btn {
     padding: 12px 24px;
     border: none;
@@ -350,35 +388,51 @@ nav {
     transition: all 0.2s ease;
 }
 
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.btn-primary,
+.btn-sencondary {
+    margin: 0;
+}
+
 .btn-primary {
-    background: #3a4750;
+    background: blue;
     color: white;
+    width: 130px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 30px;
 }
 
     .btn-primary:hover {
         background: #2c353d;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-.btn-success {
-    background: #4CAF50;
-    color: white;
-}
-
-    .btn-success:hover {
-        background: #45a049;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-    }
-
+/* Cancel Button */
 .btn-secondary {
     background: #777;
     color: white;
-    margin-left: 10px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    margin-top: 1.5px;
 }
 
     .btn-secondary:hover {
         background: #666;
-        transform: translateY(-1px);
     }

@@ -90,6 +90,7 @@
 .form-group {
     display: flex;
     flex-direction: column;
+    margin-left: 10px;
 }
 
     .form-group label {
@@ -103,7 +104,7 @@
 /* Inputs */
 .text-input,
 .select-input {
-    width: 100%;
+    width: 90%;
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
@@ -180,7 +181,7 @@
 
 .btn-manage-bills {
     padding: 10px 16px;
-    background: #0ea5e9;
+    background: #2563eb;
     color: white;
     font-weight: 600;
     border: none;

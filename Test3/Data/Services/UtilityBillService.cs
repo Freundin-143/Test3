@@ -52,5 +52,19 @@ namespace Test3.Data.Services
                 x.Year == year
             ).FirstOrDefaultAsync();
         }
+        // Add this method to UtilityBillService.cs
+        public async Task MarkBillAsPaidAsync(string billId)
+        {
+            var filter = Builders<UtilityBill>.Filter.Eq(x => x.Id, billId);
+            var update = Builders<UtilityBill>.Update
+                .Set(x => x.IsPaid, true);
+
+            await _utilityBills.UpdateOneAsync(filter, update);
+        }
+
+        public async Task DeleteBillAsync(string billId)
+        {
+            await _utilityBills.DeleteOneAsync(x => x.Id == billId);
+        }
     }
 }
