@@ -37,5 +37,16 @@ namespace Test3.Data.Services
                                     .SortByDescending(x => x.PaymentDate)
                                     .FirstOrDefaultAsync();
         }
+        // Add this method to TransactionService.cs
+        public async Task<bool> HasPaidForMonthAsync(string userId, int month, int year)
+        {
+            var transaction = await _transactions.Find(x =>
+                x.UserId == userId &&
+                x.PaymentDate.Month == month &&
+                x.PaymentDate.Year == year
+            ).FirstOrDefaultAsync();
+
+            return transaction != null;
+        }
     }
 }

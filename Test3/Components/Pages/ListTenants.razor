@@ -33,7 +33,7 @@
     <div class="main-content">
         <div class="header-section">
             <h2>Tenant Management</h2>
-            <button class="btn btn-primary" @onclick="ShowAddModal" disabled="@isLoading">
+            <button class="btn-add-tenant" @onclick="ShowAddModal" disabled="@isLoading">
                 + Add Tenant
             </button>
         </div>
@@ -98,10 +98,7 @@
     {
         <div class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-header">
-                    <h3>Add New Tenant</h3>
-                    <button class="close-btn" @onclick="CloseModal">×</button>
-                </div>
+
 
                 <div class="modal-body">
                     <form>
@@ -155,8 +152,8 @@
 
                         <div class="form-group">
                             <label class="required">Contact Number</label>
-                            <input class="form-control" @bind="newLease.Contact" 
-                                   placeholder="e.g., +63 912 345 6789" 
+                            <input class="form-control" @bind="newLease.Contact"
+                                   placeholder="e.g., +63 912 345 6789"
                                    disabled="@isUserSelected" />
                             @if (validationErrors.ContainsKey("Contact"))
                             {
@@ -166,8 +163,8 @@
 
                         <div class="form-group">
                             <label>Email Address</label>
-                            <input class="form-control" @bind="newLease.Email" 
-                                   placeholder="Enter email address" type="email" 
+                            <input class="form-control" @bind="newLease.Email"
+                                   placeholder="Enter email address" type="email"
                                    disabled="@isUserSelected" />
                             @if (validationErrors.ContainsKey("Email"))
                             {
@@ -177,7 +174,7 @@
 
                         <div class="form-group">
                             <label class="required">Move-in Date</label>
-                            <input class="form-control" type="date" @bind="newLease.MoveInDate" 
+                            <input class="form-control" type="date" @bind="newLease.MoveInDate"
                                    max="@DateTime.Now.ToString("yyyy-MM-dd")" />
                             @if (validationErrors.ContainsKey("MoveInDate"))
                             {
@@ -202,7 +199,7 @@
 
                         <div class="form-group">
                             <label class="required">Monthly Rent (₱)</label>
-                            <input class="form-control" type="number" @bind="newLease.RentAmount" 
+                            <input class="form-control" type="number" @bind="newLease.RentAmount"
                                    step="0.01" placeholder="0.00" />
                             @if (validationErrors.ContainsKey("RentAmount"))
                             {
@@ -212,7 +209,7 @@
 
                         <div class="form-group">
                             <label class="required">Security Deposit (₱)</label>
-                            <input class="form-control" type="number" @bind="newLease.SecurityDeposit" 
+                            <input class="form-control" type="number" @bind="newLease.SecurityDeposit"
                                    step="0.01" placeholder="0.00" />
                             @if (validationErrors.ContainsKey("SecurityDeposit"))
                             {
@@ -230,10 +227,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CloseModal" disabled="@isSaving">
+                    <button class="btn-secondary" @onclick="CloseModal" disabled="@isSaving">
                         Cancel
                     </button>
-                    <button class="btn btn-primary" @onclick="SaveLease" disabled="@isSaving">
+                    <button class="btn-primary" @onclick="SaveLease" disabled="@isSaving">
                         @if (isSaving)
                         {
                             <span>Saving...</span>
@@ -284,17 +281,17 @@
     {
         isLoading = true;
         errorMessage = "";
-        
+
         try
         {
             // Load existing leases
             leases = await LeaseService.GetLeasesByLandlordAsync(LandlordId);
-            
+
             // Load available units (rooms that are not occupied)
             var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
             var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
             availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
-            
+
             // Load registered users from UserService
             registeredUsers = await UserService.GetAllUsersAsync();
         }
@@ -314,13 +311,13 @@
     {
         // Format: First Name, Middle Name, Last Name
         var parts = new List<string>();
-        
+
         if (!string.IsNullOrWhiteSpace(user.FirstName))
             parts.Add(user.FirstName);
-            
+
         if (!string.IsNullOrWhiteSpace(user.MiddleName))
             parts.Add(user.MiddleName);
-            
+
         if (!string.IsNullOrWhiteSpace(user.LastName))
             parts.Add(user.LastName);
 
@@ -328,24 +325,24 @@
     }
 
     private void OnUserSelected()
-{
-    if (!string.IsNullOrEmpty(selectedUserId))
     {
-        var selectedUser = registeredUsers.FirstOrDefault(u => u.Id == selectedUserId);
-
-        if (selectedUser != null)
+        if (!string.IsNullOrEmpty(selectedUserId))
         {
-            newLease.FullName = FormatUserName(selectedUser);
-            newLease.Contact = selectedUser.ContactNumber ?? "";
-            newLease.Email = selectedUser.Email ?? "";
-            isUserSelected = true;
+            var selectedUser = registeredUsers.FirstOrDefault(u => u.Id == selectedUserId);
+
+            if (selectedUser != null)
+            {
+                newLease.FullName = FormatUserName(selectedUser);
+                newLease.Contact = selectedUser.ContactNumber ?? "";
+                newLease.Email = selectedUser.Email ?? "";
+                isUserSelected = true;
+            }
+        }
+        else
+        {
+            isUserSelected = false;
         }
     }
-    else
-    {
-        isUserSelected = false;
-    }
-}
 
 
     private async void ShowAddModal()
@@ -362,11 +359,11 @@
         validationErrors.Clear();
         saveMessage = "";
         isSaveError = false;
-        
+
         // Refresh available units and users
         await LoadAvailableUnits();
         await LoadRegisteredUsers();
-        
+
         ShowModal = true;
         StateHasChanged();
     }
@@ -478,7 +475,7 @@
 
             // Save to database
             await LeaseService.CreateLeaseAsync(newLease);
-            
+
             // Update room status to Occupied
             var rooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
             var roomToUpdate = rooms.FirstOrDefault(r => r.UnitNumber == newLease.UnitNumber);

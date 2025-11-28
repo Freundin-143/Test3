@@ -3,9 +3,11 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 .screen-container {
     width: 390px;
     height: 1026px;
+    background-color: #64748B;
     margin: 0 auto;
     position: relative;
     overflow: hidden;
@@ -36,14 +38,9 @@ html, body {
     flex-direction: column;
     align-items: center;
     padding: 2.5rem 0;
-    height: 100vh;
-    position: relative;
-    left: 0;
-    top: 0;
-    width: 100%;
+    height: 100%;
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
-    overflow-y: auto;
 }
 
 .logo {
@@ -118,6 +115,7 @@ nav {
     padding-bottom: 1.5rem;
     font-family: 'Archivo Black', sans-serif;
 }
+
 .logout-btn {
     background: white;
     color: #64748B;
@@ -136,8 +134,9 @@ nav {
     .logout-btn:hover {
         background: #e0e0e0;
     }
+
 .main-content {
-    padding: 0;
+    padding: 0.5rem 3rem 1rem 3rem;
     background-color: white;
     display: flex;
     flex-direction: column;
@@ -146,21 +145,51 @@ nav {
     box-sizing: border-box;
     font-family: 'Archivo Black', sans-serif;
     overflow-y: auto;
-    margin-left: 0;
-    width: 100%;
+}
+/*--------------HEADER------------------*/
+.header-section {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
-.header {
+    .header-section h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #444;
+        margin-bottom: 20px;
+    }
+
+.summary-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 350px; /* Adjust width to fit your layout */
+    margin: 0 auto; /* Center the whole block */
+}
+
+.summary-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
-    font-family: 'Archivo Black', sans-serif;
-    background: #64748B;
-    padding: 1rem 1.5rem;
-    border-radius: 20px;
-    color: white;
 }
+
+    .summary-card h3 {
+        font-size: 16px;
+        font-weight: 500;
+        color: #444;
+    }
+
+    .summary-card .amount,
+    .summary-card .count {
+        border-bottom: 2px solid #ccc;
+        width: 180px; /* underline length */
+        text-align: left;
+        padding-bottom: 3px;
+        font-size: 15px;
+        color: #555;
+    }
+
 
 .stats {
     display: flex;

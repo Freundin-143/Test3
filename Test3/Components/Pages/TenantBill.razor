@@ -12,8 +12,6 @@
 <PageTitle>Tenant Payment Portal</PageTitle>
 
 <div class="container">
-    <button class="back_btn" @onclick="BackBtn">Back to Dashboard</button>
-
     @if (isLoading)
     {
         <div class="loading">Loading bill information...</div>
@@ -32,10 +30,19 @@
     else
     {
         <div class="header-section">
-            <h2>BILL FOR NEXT MONTH</h2>
+            <div class="header-title-row">
+                <button class="back_btn" @onclick="BackBtn">Back to Dashboard</button>
+                <h2>BILL FOR @DateTime.Now.ToString("MMMM yyyy").ToUpper()</h2>
+            </div>
             <div class="tenant-info">
                 <p><strong>Tenant:</strong> @currentLease.FullName</p>
                 <p><strong>Unit:</strong> @currentLease.UnitNumber</p>
+                @if (hasPaidCurrentBill)
+                {
+                    <div class="payment-status-badge">
+                        <span class="status-completed">PAID</span>
+                    </div>
+                }
             </div>
             <div class="info-grid">
                 <div class="info-row">
@@ -62,36 +69,55 @@
         </div>
 
         <div class="payment-section">
-            <h2>MAKE PAYMENT</h2>
-            <div class="payment-form">
-                <div class="form-group">
-                    <label>Payment Amount (₱):</label>
-                    <input type="number" @bind="PaymentAmount" step="0.01"
-                           placeholder="Enter amount" class="payment-input" />
-                    @if (showAmountError)
-                    {
-                        <div class="validation-error">Amount must be between ₱1 and ₱@TotalAmount.ToString("N2")</div>
-                    }
+            <h2>PAYMENT STATUS</h2>
+
+            @if (hasPaidCurrentBill)
+            {
+                <div class="payment-completed">
+                    <div class="completed-icon">✓</div>
+                    <h3>Payment Completed</h3>
+                    <p>Your payment of <strong>₱@TotalAmount.ToString("N2")</strong> for @DateTime.Now.ToString("MMMM yyyy") has been successfully processed.</p>
+                    <div class="payment-details">
+                        <p><strong>Paid on:</strong> @GetCurrentMonthPaymentDate()</p>
+                        <p><strong>Payment Method:</strong> @GetCurrentMonthPaymentMethod()</p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Payment Method:</label>
-                    <select @bind="PaymentMethod" class="payment-method-select">
-                        <option value="">Select method...</option>
-                        <option value="GCASH">GCash</option>
-                        <option value="CASH">Cash</option>
-                        <option value="DEBIT CARD">Debit Card</option>
-                        <option value="CREDIT CARD">Credit Card</option>
-                        <option value="BANK TRANSFER">Bank Transfer</option>
-                    </select>
-                    @if (showMethodError)
-                    {
-                        <div class="validation-error">Please select a payment method</div>
-                    }
+            }
+            else
+            {
+                <div class="payment-instruction">
+                    <p><strong>Please pay the exact total amount: ₱@TotalAmount.ToString("N2")</strong></p>
                 </div>
-            </div>
-            <button class="submit-btn" @onclick="SubmitPayment" disabled="@isProcessingPayment">
-                @(isProcessingPayment ? "Processing..." : "Submit Payment")
-            </button>
+                <div class="payment-form">
+                    <div class="form-group">
+                        <label>Payment Amount (₱):</label>
+                        <input type="number" @bind="PaymentAmount" step="0.01"
+                               placeholder="Enter total amount" class="payment-input" />
+                        @if (showAmountError)
+                        {
+                            <div class="validation-error">@amountErrorText</div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Method:</label>
+                        <select @bind="PaymentMethod" class="payment-method-select">
+                            <option value="">Select method...</option>
+                            <option value="GCASH">GCash</option>
+                            <option value="CASH">Cash</option>
+                            <option value="DEBIT CARD">Debit Card</option>
+                            <option value="CREDIT CARD">Credit Card</option>
+                            <option value="BANK TRANSFER">Bank Transfer</option>
+                        </select>
+                        @if (showMethodError)
+                        {
+                            <div class="validation-error">Please select a payment method</div>
+                        }
+                    </div>
+                </div>
+                <button class="submit-btn" @onclick="SubmitPayment" disabled="@isProcessingPayment">
+                    @(isProcessingPayment ? "Processing..." : "Submit Payment")
+                </button>
+            }
 
             @if (!string.IsNullOrEmpty(paymentMessage))
             {
@@ -107,6 +133,7 @@
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Month</th>
                         <th>Amount</th>
                         <th>Method</th>
                         <th>Status</th>
@@ -117,18 +144,23 @@
                     {
                         @foreach (var payment in PaymentHistory)
                         {
-                            <tr>
+                            <tr class="@(IsCurrentMonthPayment(payment) ? "current-month-payment" : "")">
                                 <td>@payment.PaymentDate.ToString("MM/dd/yyyy")</td>
+                                <td>@payment.PaymentDate.ToString("MMM yyyy")</td>
                                 <td>₱@payment.PaymentAmount.ToString("N2")</td>
                                 <td>@payment.PaymentMethod</td>
-                                <td><span class="status-badge @payment.Status.ToLower()">@payment.Status</span></td>
+                                <td>
+                                    <span class="status-badge @payment.Status.ToLower()">
+                                        @(IsCurrentMonthPayment(payment) ? "CURRENT" : payment.Status)
+                                    </span>
+                                </td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="4" class="no-payments">No payment history found</td>
+                            <td colspan="5" class="no-payments">No payment history found</td>
                         </tr>
                     }
                 </tbody>
@@ -151,9 +183,11 @@
     private string PaymentMethod { get; set; } = "";
     private bool showAmountError = false;
     private bool showMethodError = false;
+    private string amountErrorText = "";
     private bool isProcessingPayment = false;
     private string paymentMessage = "";
     private bool isPaymentError = false;
+    private bool hasPaidCurrentBill = false;
 
     private List<TransactionHistory> PaymentHistory { get; set; } = new();
     private bool isLoading = true;
@@ -162,6 +196,8 @@
     private Lease? currentLease;
     private Room? currentRoom;
     private User? currentUser;
+    private UtilityBill? currentUtilityBill;
+    private TransactionHistory? currentMonthTransaction;
 
     protected override async Task OnInitializedAsync()
     {
@@ -188,26 +224,18 @@
                 return;
             }
 
-            Console.WriteLine($"Loading data for user: {currentUser.FirstName} {currentUser.LastName}");
-
-            // Get ALL leases and find the one matching this user
-            var allLeases = await GetAllLeasesAsync();
-            Console.WriteLine($"Found {allLeases.Count} total leases in database");
-
-            // Find lease by matching user's full name
+            // Get all leases and find matching one
+            var allLeases = await LeaseService.GetAllLeasesAsync();
             currentLease = FindUserLease(allLeases, currentUser);
 
             if (currentLease == null)
             {
                 errorMessage = "No active lease found for this user. Please contact your landlord.";
                 isLoading = false;
-                Console.WriteLine("No lease found for user");
                 return;
             }
 
-            Console.WriteLine($"Found lease for unit: {currentLease.UnitNumber}");
-
-            // Get room info using the landlord ID from the lease
+            // Get room info
             var rooms = await RoomService.GetRoomsByLandlordIdAsync(currentLease.LandlordId);
             currentRoom = rooms.FirstOrDefault(r => r.UnitNumber == currentLease.UnitNumber);
 
@@ -219,31 +247,33 @@
             }
 
             RoomPrice = currentRoom.RoomPrice;
-            Console.WriteLine($"Room price: {RoomPrice}");
 
             // Get current utility bills
             var currentDate = DateTime.UtcNow;
-            var utilityBill = await UtilityBillService.GetBillByUnitNumberAsync(
+            currentUtilityBill = await UtilityBillService.GetBillByUnitNumberAsync(
                 currentLease.UnitNumber, currentDate.Month, currentDate.Year);
 
-            if (utilityBill != null)
+            if (currentUtilityBill != null)
             {
-                ElectricityBill = utilityBill.ElectricityBill;
-                WaterBill = utilityBill.WaterBill;
-                DueDate = utilityBill.DueDate;
-                Console.WriteLine($"Found utility bills - Electricity: {ElectricityBill}, Water: {WaterBill}");
+                ElectricityBill = currentUtilityBill.ElectricityBill;
+                WaterBill = currentUtilityBill.WaterBill;
+                DueDate = currentUtilityBill.DueDate;
             }
             else
             {
                 ElectricityBill = 0;
                 WaterBill = 0;
                 DueDate = new DateTime(currentDate.Year, currentDate.Month, 1).AddMonths(1);
-                Console.WriteLine("No utility bills found for current month");
             }
 
-            // Load payment history
+            // Load payment history and check if current month is already paid
             PaymentHistory = await TransactionService.GetTransactionsByUserAsync(UserId);
-            Console.WriteLine($"Loaded {PaymentHistory.Count} payment history records");
+            hasPaidCurrentBill = await CheckIfCurrentMonthPaid();
+
+            if (hasPaidCurrentBill)
+            {
+                currentMonthTransaction = GetCurrentMonthTransaction();
+            }
 
             isLoading = false;
         }
@@ -252,63 +282,88 @@
             errorMessage = "Error loading user data. Please try again.";
             isLoading = false;
             Console.WriteLine($"Error loading user data: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
     }
 
-    private async Task<List<Lease>> GetAllLeasesAsync()
+    private async Task<bool> CheckIfCurrentMonthPaid()
     {
-        try
-        {
-            // Use the new method to get all leases
-            return await LeaseService.GetAllLeasesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting all leases: {ex.Message}");
-            return new List<Lease>();
-        }
+        var currentDate = DateTime.UtcNow;
+        return PaymentHistory.Any(p =>
+            p.PaymentDate.Month == currentDate.Month &&
+            p.PaymentDate.Year == currentDate.Year);
+    }
+
+    private TransactionHistory? GetCurrentMonthTransaction()
+    {
+        var currentDate = DateTime.UtcNow;
+        return PaymentHistory.FirstOrDefault(p =>
+            p.PaymentDate.Month == currentDate.Month &&
+            p.PaymentDate.Year == currentDate.Year);
+    }
+
+    private bool IsCurrentMonthPayment(TransactionHistory payment)
+    {
+        var currentDate = DateTime.UtcNow;
+        return payment.PaymentDate.Month == currentDate.Month &&
+               payment.PaymentDate.Year == currentDate.Year;
+    }
+
+    private string GetCurrentMonthPaymentDate()
+    {
+        return currentMonthTransaction?.PaymentDate.ToString("MMM dd, yyyy") ?? DateTime.Now.ToString("MMM dd, yyyy");
+    }
+
+    private string GetCurrentMonthPaymentMethod()
+    {
+        return currentMonthTransaction?.PaymentMethod ?? "Unknown";
     }
 
     private Lease? FindUserLease(List<Lease> leases, User user)
     {
-        // Try different ways to match the user with a lease
         var userFullName = $"{user.FirstName} {user.LastName}".Trim().ToLower();
         var userFullNameWithMiddle = $"{user.FirstName} {user.MiddleName} {user.LastName}".Trim().ToLower();
 
-        Console.WriteLine($"Looking for lease matching: {userFullName} or {userFullNameWithMiddle}");
-
-        var matchingLease = leases.FirstOrDefault(lease =>
+        return leases.FirstOrDefault(lease =>
             lease.FullName.Trim().ToLower() == userFullName ||
             lease.FullName.Trim().ToLower() == userFullNameWithMiddle ||
             lease.FullName.Trim().ToLower().Contains(user.FirstName.ToLower()) ||
             lease.FullName.Trim().ToLower().Contains(user.LastName.ToLower()));
-
-        if (matchingLease != null)
-        {
-            Console.WriteLine($"Found matching lease: {matchingLease.FullName} for unit {matchingLease.UnitNumber}");
-        }
-
-        return matchingLease;
     }
 
     private async Task SubmitPayment()
     {
         showAmountError = false;
         showMethodError = false;
+        amountErrorText = "";
         paymentMessage = "";
         isPaymentError = false;
 
         // Validation
-        if (PaymentAmount <= 0 || PaymentAmount > TotalAmount)
-        {
-            showAmountError = true;
-            return;
-        }
-
         if (string.IsNullOrEmpty(PaymentMethod))
         {
             showMethodError = true;
+            return;
+        }
+
+        if (PaymentAmount != TotalAmount)
+        {
+            showAmountError = true;
+            amountErrorText = $"Please pay the exact total amount of ₱{TotalAmount.ToString("N2")}";
+            return;
+        }
+
+        if (PaymentAmount <= 0)
+        {
+            showAmountError = true;
+            amountErrorText = "Payment amount must be greater than 0";
+            return;
+        }
+
+        // Check if already paid for current month
+        if (hasPaidCurrentBill)
+        {
+            paymentMessage = "You have already paid for this month.";
+            isPaymentError = true;
             return;
         }
 
@@ -317,6 +372,7 @@
 
         try
         {
+            var currentDate = DateTime.UtcNow;
             var transaction = new TransactionHistory
             {
                 UserId = UserId,
@@ -325,7 +381,7 @@
                 LandlordId = currentLease?.LandlordId ?? "",
                 PaymentAmount = PaymentAmount,
                 PaymentMethod = PaymentMethod,
-                PaymentDate = DateTime.UtcNow,
+                PaymentDate = currentDate,
                 Status = "COMPLETED",
                 RoomPrice = RoomPrice,
                 ElectricityBill = ElectricityBill,
@@ -333,20 +389,30 @@
                 TotalAmount = TotalAmount
             };
 
+            // Save transaction
             await TransactionService.CreateTransactionAsync(transaction);
+
+            // Mark utility bill as paid (but don't remove it)
+            if (currentUtilityBill != null)
+            {
+                currentUtilityBill.IsPaid = true;
+                await UtilityBillService.CreateOrUpdateBillAsync(currentUtilityBill);
+            }
 
             paymentMessage = "Payment submitted successfully!";
             isPaymentError = false;
 
-            // Refresh payment history
-            PaymentHistory = await TransactionService.GetTransactionsByUserAsync(UserId);
+            // Refresh data to show completed state
+            await LoadUserData();
 
             // Reset form
             PaymentAmount = 0;
             PaymentMethod = "";
 
-            await Task.Delay(2000);
+            // Clear success message after delay
+            await Task.Delay(3000);
             paymentMessage = "";
+            StateHasChanged();
         }
         catch (Exception ex)
         {
