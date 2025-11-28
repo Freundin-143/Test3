@@ -1,6 +1,10 @@
+* {
+    margin: 0px;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
-    margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8f8f8;
     height: 100vh;
@@ -18,10 +22,12 @@ body {
     justify-content: space-between;
     align-items: center;
     background-color: #64748B;
-    padding: 1rem 2rem;
+    padding: 19px 10px 100px 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     flex-shrink: 0;
     padding: 45px;
+    margin-bottom: 3px;
+    border-radius: 30px;
 }
 
     .dashboard-header .left-section {
@@ -150,13 +156,11 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    height: 340px;
+    height: 390px;
     min-height: 340px;
     overflow: hidden;
     position: relative;
 }
-
-
 
 .image-placeholder {
     background-color: #ccc;
@@ -182,7 +186,7 @@ body {
 
 .apartment-image {
     width: calc(100% + 3rem);
-    height: 180px;
+    height: 200px;
     width: 255px;
     object-fit: cover;
     border-radius: 6px;
@@ -208,6 +212,7 @@ body {
         -webkit-line-clamp: 4;
         -webkit-box-orient: vertical;
         max-height: 4em;
+        margin-bottom: 5px;
     }
 
         .info p strong {
@@ -218,7 +223,8 @@ body {
 
 .view-btn {
     align-self: flex-end;
-    background-color: #cfcfcf;
+    background: #0077B6;
+    color: white;
     border: none;
     border-radius: 12px;
     padding: 0.6rem 1.4rem;
@@ -228,12 +234,12 @@ body {
     font-family: Arial, sans-serif;
     font-size: 15px;
     position: absolute;
-    bottom: 2rem;
-    right: 2rem;
+    bottom: 1rem;
+    right: 1rem;
 }
 
     .view-btn:hover {
-        background-color: #bbb;
+        background-color: #6BAED6;
     }
 
 .loading, .no-apartments {

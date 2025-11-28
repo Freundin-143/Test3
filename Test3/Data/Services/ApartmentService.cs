@@ -77,9 +77,10 @@ namespace Test3.Data.Services
         }
 
         // Create new apartment (empty document)
-        public async Task CreateApartmentAsync(Apartment apartment)
+        public async Task<Apartment> CreateApartmentAsync(Apartment apartment)
         {
             await _apartments.InsertOneAsync(apartment);
+            return apartment; // MongoDB automatically sets the Id property
         }
 
         // Delete apartment

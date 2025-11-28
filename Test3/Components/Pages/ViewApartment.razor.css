@@ -1,4 +1,7 @@
-﻿body {
+﻿* {
+}
+
+body {
     font-family: "Poppins", sans-serif;
     background-color: #f6f6f6;
     margin: 0;
@@ -11,49 +14,71 @@
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    background-color: #f1f1f1;
-    padding: 1rem;
-    width: 100%;
-    border-radius: 10px;
-    
+    background-color: #64748B;
+    padding: 40px;
+    padding-bottom: 30px;
+    color: white;
+    border-radius: 30px;
+    position: relative;
+    margin-bottom: 10px;
 }
 
 .back-btn {
     position: absolute;
-    left: 30px;
-    top: 25px;
-    background: #ffffff;
+    top: 20px;
+    left: 20px;
+    background: #fff;
     color: #64748B;
     border: none;
     padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
+    border-radius: 18px;
     font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-    transition: all 0.2s ease;
 }
-.contact-info {
-    flex: 1;
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 40px;
+    width: 100%;
+}
+
+.owner-info {
+    width: 30%;
+    color: white;
+    margin-right: -120px;
+}
+
+.center-contact {
+    margin-top: -45px;
+    width: 25%;
     text-align: center;
+}
+
+.contact-pill {
+    background: #e5e5e5;
+    color: #333;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 500;
+    margin-bottom: 10px;
 }
 
 .summary {
+    width: 20%;
     text-align: right;
-    margin-right: 30px;
+    font-size: 1rem;
 }
 
-.contact-title {
-    text-align: center;
-    margin: 1.5rem 0;
-    background-color: #eaeaea;
-    padding: 0.5rem;
-    border-radius: 10px;
-    font-weight: 500;
-}
+
+
+
+
+
+
+
 
 .room-grid {
     display: grid;

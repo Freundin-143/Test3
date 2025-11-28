@@ -20,22 +20,27 @@
 	else
 	{
 		<header class="header">
-			<h3 class="contact-title">CONTACT THE LANDLORD AT:  </h3>
 			<button @onclick="GoBack" class="back-btn">Back to Dashboard</button>
-			<div class="contact-info">
-				<p><strong>NAME:</strong> @apartment.ApartmentOwner</p>
-				<p><strong>ADDRESS:</strong> @apartment.Address</p>
-				<p><strong>FACEBOOK:</strong> @apartment.FacebookAccount</p>
-				<p><strong>EMAIL:</strong> @apartment.EmailAddress</p>
-				<p><strong>CONTACT NO:</strong> @apartment.ContactNo</p>
-			</div>
 
-			<div class="summary">
-				<p><strong>Total rooms:</strong> @roomStats.totalRooms</p>
-				<p><strong>Available Room:</strong> @roomStats.availableRooms</p>
+			<div class="header-top">
+				<div class="owner-info">
+					<p><strong>Name:</strong> @apartment.ApartmentOwner</p>
+					<p><strong>Address:</strong> @apartment.Address</p>
+				</div>
+
+				<div class="center-contact">
+					<div class="contact-pill">Contact the landlord at:</div>
+					<p><strong>Facebook:</strong> @apartment.FacebookAccount</p>
+					<p><strong>Email:</strong> @apartment.EmailAddress</p>
+					<p><strong>Contact no.:</strong> @apartment.ContactNo</p>
+				</div>
+
+				<div class="summary">
+					<p><strong>Total room:</strong> @roomStats.totalRooms</p>
+					<p><strong>Available Room:</strong> @roomStats.availableRooms</p>
+				</div>
 			</div>
 		</header>
-
 
 
 		<section class="room-grid">
