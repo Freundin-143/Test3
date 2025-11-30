@@ -27,6 +27,9 @@ namespace Test3.Data.Models
         [BsonElement("MoveInDate")]
         public DateTime MoveInDate { get; set; } = DateTime.UtcNow;
 
+        [BsonElement("MoveOutDate")]
+        public DateTime? MoveOutDate { get; set; } = null; // Nullable for active tenants
+
         [BsonElement("LeaseDuration")]
         public string LeaseDuration { get; set; } = string.Empty;
 

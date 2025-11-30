@@ -54,10 +54,12 @@
                         <tr>
                             <th>No.</th>
                             <th>Full Name</th>
+                            <th>Apartment Name</th>
                             <th>Unit#</th>
                             <th>Contact #</th>
                             <th>Email</th>
                             <th>Move‑in Date</th>
+                            <th>Move-out Date</th>
                             <th>Lease Duration</th>
                             <th>Monthly Rent</th>
                             <th>Security Deposit</th>
@@ -67,7 +69,7 @@
                         @if (!leases.Any())
                         {
                             <tr>
-                                <td colspan="9" class="text-center no-data">No tenants found.</td>
+                                <td colspan="11" class="text-center no-data">No tenants found.</td>
                             </tr>
                         }
                         else
@@ -77,10 +79,12 @@
                                 <tr>
                                     <td>@(lease.index + 1)</td>
                                     <td>@lease.value.FullName</td>
+                                    <td>@GetApartmentNameForUnit(lease.value.UnitNumber)</td>
                                     <td>@lease.value.UnitNumber</td>
                                     <td>@lease.value.Contact</td>
                                     <td>@lease.value.Email</td>
                                     <td>@lease.value.MoveInDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@GetFormattedMoveOutDate(lease.value.MoveOutDate)</td>
                                     <td>@lease.value.LeaseDuration</td>
                                     <td>₱@lease.value.RentAmount.ToString("N2")</td>
                                     <td>₱@lease.value.SecurityDeposit.ToString("N2")</td>
@@ -326,6 +330,9 @@
             // *** ADD THIS: Load apartment names ***
             await LoadApartmentNames();
 
+            // Load unit to apartment mapping
+            await LoadUnitApartmentMapping();
+
             // Load registered users from UserService
             registeredUsers = await UserService.GetAllUsersAsync();
             filteredUsers = registeredUsers;
@@ -487,6 +494,9 @@
 
             // *** ADD THIS: Refresh apartment names when loading units ***
             await LoadApartmentNames();
+
+            // Load unit to apartment mapping
+            await LoadUnitApartmentMapping();
         }
         catch (Exception ex)
         {
@@ -644,3 +654,47 @@
         Navigation.NavigateTo($"/TransacHis?landlordId={LandlordId}", true);
     }
 }
+    // Dictionary for unit to apartment mapping
+    private Dictionary<string, string> unitToApartmentMap = new();
+
+    private async Task LoadUnitApartmentMapping()
+    {
+        try
+        {
+            var rooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            var apartments = await ApartmentService.GetApartmentsByLandlordIdAsync(LandlordId);
+            var apartmentDict = apartments.ToDictionary(a => a.Id, a => a.ApartmentName);
+
+            unitToApartmentMap = rooms.ToDictionary(r => r.UnitNumber, r =>
+                apartmentDict.ContainsKey(r.ApartmentId) ? apartmentDict[r.ApartmentId] : "Unknown Apartment");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading unit-apartment mapping: {ex.Message}");
+            unitToApartmentMap = new Dictionary<string, string>();
+        }
+    }
+
+    private string GetApartmentNameForUnit(string unitNumber)
+    {
+        return unitToApartmentMap.ContainsKey(unitNumber)
+            ? unitToApartmentMap[unitNumber]
+            : "Unknown Apartment";
+    }
+
+    private DateTime? CalculateMoveOutDate(DateTime moveInDate, string leaseDuration)
+    {
+        return leaseDuration.ToLower() switch
+        {
+            "6 months" => moveInDate.AddMonths(6),
+            "1 year" => moveInDate.AddYears(1),
+            "2 years" => moveInDate.AddYears(2),
+            "month-to-month" => null, // Active tenants
+            _ => null
+        };
+    }
+
+    private string GetFormattedMoveOutDate(DateTime? moveOutDate)
+    {
+        return moveOutDate?.ToString("MMM dd, yyyy") ?? "-";
+    }

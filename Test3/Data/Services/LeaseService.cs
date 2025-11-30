@@ -1,11 +1,26 @@
 ﻿using MongoDB.Driver;
 using Test3.Data.Models;
 
+using System;
+
 namespace Test3.Data.Services
 {
     public class LeaseService
     {
         private readonly IMongoCollection<Lease> _leases;
+
+        // Calculate move-out date based on lease duration
+        private DateTime? CalculateMoveOutDate(DateTime moveInDate, string leaseDuration)
+        {
+            return leaseDuration.ToLower() switch
+            {
+                "6 months" => moveInDate.AddMonths(6),
+                "1 year" => moveInDate.AddYears(1),
+                "2 years" => moveInDate.AddYears(2),
+                "month-to-month" => null, // Active tenants
+                _ => null
+            };
+        }
 
         public LeaseService(IMongoDatabase database)
         {
@@ -23,6 +38,9 @@ namespace Test3.Data.Services
         // Create new lease
         public async Task CreateLeaseAsync(Lease lease)
         {
+            // Calculate and set move-out date
+            lease.MoveOutDate = CalculateMoveOutDate(lease.MoveInDate, lease.LeaseDuration);
+
             await _leases.InsertOneAsync(lease);
         }
 
