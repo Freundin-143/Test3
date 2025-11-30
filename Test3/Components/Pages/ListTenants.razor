@@ -94,7 +94,6 @@
     </div>
 
     <!-- Add Tenant Modal -->
-    <!-- Add Tenant Modal -->
     @if (ShowModal)
     {
         <div class="modal-overlay">
@@ -199,12 +198,14 @@
                         <div class="form-group">
                             <label class="required">Move-in Date</label>
                             <input class="form-control" type="date" @bind="newLease.MoveInDate"
+                                   min="@DateTime.Now.ToString("yyyy-MM-dd")"
                                    max="@DateTime.Now.ToString("yyyy-MM-dd")" />
                             @if (validationErrors.ContainsKey("MoveInDate"))
                             {
                                 <div class="validation-error">@validationErrors["MoveInDate"]</div>
                             }
                         </div>
+
 
                         <div class="form-group">
                             <label class="required">Lease Duration</label>
@@ -318,13 +319,12 @@
             // Load existing leases
             leases = await LeaseService.GetLeasesByLandlordAsync(LandlordId);
 
-            // Load available units (rooms that are not occupied)
-            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
-            var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
-            availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
-
-            // *** ADD THIS: Load apartment names ***
+            // Load apartment names
             await LoadApartmentNames();
+
+            // Load available units - RELY ON STATUS FIELD ONLY
+            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            availableUnits = allRooms.Where(r => r.Status == "Available").ToList();
 
             // Load registered users from UserService
             registeredUsers = await UserService.GetAllUsersAsync();
@@ -481,11 +481,14 @@
     {
         try
         {
-            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
-            var occupiedUnits = leases.Select(l => l.UnitNumber).ToList();
-            availableUnits = allRooms.Where(r => !occupiedUnits.Contains(r.UnitNumber) && r.Status == "Available").ToList();
+            // Reload leases to get fresh data
+            leases = await LeaseService.GetLeasesByLandlordAsync(LandlordId);
 
-            // *** ADD THIS: Refresh apartment names when loading units ***
+            // Load all rooms and filter by Status only
+            var allRooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
+            availableUnits = allRooms.Where(r => r.Status == "Available").ToList();
+
+            // Refresh apartment names
             await LoadApartmentNames();
         }
         catch (Exception ex)
@@ -547,8 +550,9 @@
         if (newLease.SecurityDeposit < 0)
             validationErrors["SecurityDeposit"] = "Security deposit cannot be negative.";
 
-        if (newLease.MoveInDate > DateTime.Today)
-            validationErrors["MoveInDate"] = "Move-in date cannot be in the future.";
+        // Updated validation: Only allow current date
+        if (newLease.MoveInDate.Date != DateTime.Today)
+            validationErrors["MoveInDate"] = "Move-in date must be today's date.";
 
         return !validationErrors.Any();
     }
@@ -568,9 +572,20 @@
 
         try
         {
-            // Check if unit is already occupied
-            var isOccupied = await LeaseService.IsUnitOccupiedAsync(LandlordId, newLease.UnitNumber);
-            if (isOccupied)
+            // Get the selected unit using the unique key to ensure we're checking the RIGHT unit
+            var selectedUnit = availableUnits.FirstOrDefault(u => GetUnitKey(u) == selectedUnitKey);
+
+            if (selectedUnit == null)
+            {
+                saveMessage = "Selected unit not found. Please try again.";
+                isSaveError = true;
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Check if THIS SPECIFIC unit is already occupied (using the exact room)
+            if (selectedUnit.Status != "Available")
             {
                 saveMessage = $"Unit {newLease.UnitNumber} is already occupied. Please select a different unit.";
                 isSaveError = true;
@@ -593,14 +608,9 @@
             // Save to database
             await LeaseService.CreateLeaseAsync(newLease);
 
-            // Update room status to Occupied
-            var rooms = await RoomService.GetRoomsByLandlordIdAsync(LandlordId);
-            var roomToUpdate = rooms.FirstOrDefault(r => r.UnitNumber == newLease.UnitNumber);
-            if (roomToUpdate != null)
-            {
-                roomToUpdate.Status = "Occupied";
-                await RoomService.UpdateRoomAsync(roomToUpdate.Id, roomToUpdate);
-            }
+            // Update THE SPECIFIC ROOM status to Occupied using the exact room ID
+            selectedUnit.Status = "Occupied";
+            await RoomService.UpdateRoomAsync(selectedUnit.Id, selectedUnit);
 
             saveMessage = "Tenant added successfully!";
             isSaveError = false;

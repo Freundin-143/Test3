@@ -289,25 +289,6 @@
         background: #E3242B;
     }
 
-.btn-save {
-    padding: 10px 20px;
-    border: none;
-    background: #1e40af;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-    .btn-save:hover:not(:disabled) {
-        background: #1e3a8a;
-    }
-
-    .btn-cancel:disabled,
-    .btn-save:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
 
 /* Form Styles */
 .form-group {

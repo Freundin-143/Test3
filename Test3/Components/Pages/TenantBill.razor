@@ -19,10 +19,12 @@
     else if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="error-message">@errorMessage</div>
+        <button class="back_btn" @onclick="BackBtn">Back to Dashboard</button>
     }
     else if (currentLease == null)
     {
         <div class="no-lease-message">
+            <button class="back_btn" @onclick="BackBtn">Back to Dashboard</button> 
             <h3>No Active Lease Found</h3>
             <p>You don't have an active lease agreement. Please contact your landlord.</p>
         </div>
